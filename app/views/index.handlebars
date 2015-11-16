@@ -1,0 +1,26 @@
+<h1>{{title}}</h1>
+
+{{> nav}}
+
+<ul>
+  {{#each locations}}
+      <li class="location">
+          <h2>Name</h2>
+          <p>{{name}}</p>
+          <h2>Lat</h2>
+          <p>{{lat}}</p>
+          <h2>Lng</h2>
+          <p>{{lng}}</p>
+          <br>
+          <p>{{formatDate createdAt day="numeric" month="long" year="numeric"}}</p>
+
+          <div class="nav">
+              <ul>
+                  <li>
+                      <a href="{{../routes.DB.LOCATION_DELETE}}/{{id}}">Delete</a>
+                  </li>
+              </ul>
+          </div>
+      </li>
+  {{/each}}
+</ul>

@@ -1,0 +1,18 @@
+<h1>{{title}}</h1>
+{{> nav}}
+
+<form action="{{routes.DB.LOCATION_ADD}}" method="post">
+    <p>Name</p>
+    <input type="text" name="name">
+
+    <p>Lat</p>
+    <input type="text" name="lat">
+
+    <p>Lng</p>
+    <input type="text" name="lng">
+
+    <p>Radius</p>
+    <input type="text" name="radius">
+
+    <input type="submit">
+</form>
