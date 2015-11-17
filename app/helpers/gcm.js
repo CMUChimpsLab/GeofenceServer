@@ -17,9 +17,7 @@ export default class GCM {
   sendMessage(obj, cb) {
     this.options.body = {
       to: "/topics/global",
-      data: {
-        message: JSON.stringify(obj)
-      }
+      data: obj
     };
 
     request(this.options, (error, response, body) => {
