@@ -5,6 +5,7 @@ import CONSTANTS from "../../config/constants";
 export default function (sequelize, DataType) {
   return sequelize.define(CONSTANTS.MODELS.LOCATION, {
     name: {type: DataType.TEXT, allowNull: false},
+    question: {type: DataType.TEXT, allowNull: false},
     lat: {type: DataType.STRING, allowNull: false},
     lng: {type: DataType.STRING, allowNull: false},
     radius: {type: DataType.STRING, allowNull: false},

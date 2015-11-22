@@ -19,7 +19,8 @@
     "request": "^2.6.0",
     "sequelize": "^3.5.1",
     "serve-favicon": "^2.3.0",
-    "sqlite3": "^3.0.5"
+    "sqlite3": "^3.0.5",
+    "uid": "0.0.2"
   },
   "devDependencies": {
     "babel": "^5.8.21",

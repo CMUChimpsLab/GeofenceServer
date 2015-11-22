@@ -2,12 +2,15 @@ import express from "express";
 import db from "../models";
 import CONSTANTS, {ROUTES} from "../../config/constants";
 import GCM from "../helpers/gcm";
+import uid from "uid"
 
 const router = express.Router();
 const gcm = new GCM();
 
 router.post(CONSTANTS.ROUTES.LOCATION_ADD, (req, res, next) => {
   const locationObj = {
+    uid : uid(16),
+    question: req.body.question,
     name: req.body.name,
     lat: req.body.lat,
     lng: req.body.lng,
