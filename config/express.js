@@ -7,10 +7,11 @@ import bodyParser from "body-parser";
 import compress from "compression";
 import methodOverride from "method-override";
 import expressHandlebars from "express-handlebars";
-import Intl from "intl"; global.Intl = Intl;
+import Intl from "intl";
+global.Intl = Intl;
 import HandlebarsIntl from "handlebars-intl";
 
-export default function(app, config) {
+export default function (app, config) {
   const exphbs = expressHandlebars.create({
     layoutsDir: config.root + '/app/views/layouts/',
     defaultLayout: 'main',
@@ -47,7 +48,7 @@ export default function(app, config) {
     next(err);
   });
 
-  if(app.get('env') === 'development'){
+  if (app.get('env') === 'development') {
     app.use((err, req, res, next) => {
       res.status(err.status || 500);
       res.render('error', {
@@ -60,10 +61,10 @@ export default function(app, config) {
 
   app.use((err, req, res, next) => {
     res.status(err.status || 500);
-      res.render('error', {
-        message: err.message,
-        error: {},
-        title: 'error'
-      });
+    res.render('error', {
+      message: err.message,
+      error: {},
+      title: 'error'
+    });
   });
 };

@@ -3,7 +3,8 @@ import CONSTANTS from "../../config/constants";
 export default function (sequelize, DataType) {
   const TaskAction = sequelize.define(CONSTANTS.MODELS.TASK_ACTION, {
     description: {type: DataType.STRING, allowNull: false},
-    type: {type: DataType.STRING, allowNull: false}
+    type: {type: DataType.STRING, allowNull: false},
+    response: DataType.STRING // TODO: should be oneToMany, since more than one user will respond
   }, {
     classMethods: {
       associate: function (models) {

@@ -5,22 +5,28 @@ import CONSTANTS, {ROUTES} from "../../config/constants";
 const router = express.Router();
 
 router.get(CONSTANTS.ROUTES.INDEX, (req, res, next) => {
-  db[CONSTANTS.MODELS.LOCATION].findAll().then(locations => {
+  db[CONSTANTS.MODELS.TASK].findAll({
+    include: [db[CONSTANTS.MODELS.LOCATION], db[CONSTANTS.MODELS.TASK_ACTION]]
+  }).then(tasks => {
     res.render(CONSTANTS.VIEWS.INDEX, {
       title: 'CrowdsourcingServer - Main',
       routes: ROUTES,
-      locations: locations
+      tasks: tasks
     });
+  }).catch(error => {
+    console.log(error.message);
+    res.json({error: error.message});
   });
 });
 
-router.get(CONSTANTS.ROUTES.LOCATION_ADD, (req, res, next) => {
-  res.render(CONSTANTS.VIEWS.LOCATION_ADD, {
-    title: 'CrowdsourcingServer - Add Location',
+router.get(CONSTANTS.ROUTES.TASK_ADD, (req, res, next) => {
+  res.render(CONSTANTS.VIEWS.TASK_ADD, {
+    title: 'CrowdsourcingServer - Add Task',
     routes: ROUTES
   });
 });
 
-export default function(app) {
-  app.use('/', router);
+
+export default function (app) {
+  app.use("/", router);
 }

@@ -3,28 +3,40 @@
 {{> nav}}
 
 <ul>
-  {{#each locations}}
-      <li class="location">
-          <h2>Location Name</h2>
-          <p>{{name}}</p>
-          <h2>Question about this Location</h2>
-          <p>{{question}}</p>
-          <h2>Lat</h2>
-          <p>{{lat}}</p>
-          <h2>Lng</h2>
-          <p>{{lng}}</p>
-          <h2>Radius</h2>
-          <p>{{radius}}</p>
-          <br>
-          <p>{{formatDate createdAt day="numeric" month="long" year="numeric"}}</p>
+  {{#each tasks}}
+    <li class="task">
+      <h2>Task</h2>
+      <p>Name: {{name}}</p>
+      <p>Cost: {{cost}}</p>
+      <br>
 
-          <div class="nav">
-              <ul>
-                  <li>
-                      <a href="{{../routes.DB.TASK_DELETE}}/{{id}}">Delete</a>
-                  </li>
-              </ul>
-          </div>
-      </li>
+      <h2>Location</h2>
+      <p>
+        <p>Name: {{location.name}}</p>
+        <p>Lat: {{location.lat}}</p>
+        <p>Lng: {{location.lng}}</p>
+        <p>Radius: {{location.radius}}</p>
+      </p>
+      <br>
+
+      <h2>Task Actions</h2>
+      <p>
+        {{#each taskactions}}
+          <p>Description: {{description}}</p>
+          <p>Type: {{type}}</p>
+        {{/each}}
+      </p>
+      <br>
+
+      <p>{{formatDate createdAt day="numeric" month="long" year="numeric"}}</p>
+
+      <div class="nav">
+        <ul>
+          <li>
+            <a href="{{../routes.DB.TASK_DELETE}}/{{id}}">Delete</a>
+          </li>
+        </ul>
+      </div>
+    </li>
   {{/each}}
 </ul>

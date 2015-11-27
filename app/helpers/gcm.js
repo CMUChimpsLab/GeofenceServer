@@ -15,6 +15,7 @@ export default class GCM {
   }
 
   sendMessage(obj, cb) {
+    // TODO: use object extend
     this.options.body = {
       to: "/topics/global",
       data: obj
