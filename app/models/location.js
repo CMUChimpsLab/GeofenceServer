@@ -1,21 +1,23 @@
 import CONSTANTS from "../../config/constants";
 
-// http://sequelize.readthedocs.org/en/1.7.0/docs/models/
-
 export default function (sequelize, DataType) {
-  return sequelize.define(CONSTANTS.MODELS.LOCATION, {
-    name: {type: DataType.TEXT, allowNull: false},
-    question: {type: DataType.TEXT, allowNull: false},
-    lat: {type: DataType.STRING, allowNull: false},
-    lng: {type: DataType.STRING, allowNull: false},
-    radius: {type: DataType.STRING, allowNull: false},
-    expiresAt: {type: DataType.DATE, defaultValue: DataType.NOW}
+  const Location = sequelize.define(CONSTANTS.MODELS.LOCATION, {
+    name: {type: DataType.STRING, allowNull: false},
+    lat: {type: DataType.DOUBLE, allowNull: false},
+    lng: {type: DataType.DOUBLE, allowNull: false},
+    radius: {type: DataType.DOUBLE, allowNull: false}
   }, {
     classMethods: {
       associate: function (models) {
-        // example on how to add relations
-        // Article.hasMany(models.Comments);
+        Location.belongsTo(models[CONSTANTS.MODELS.TASK], {
+          onDelete: "CASCADE",
+          foreignKey: {
+            allowNull: false
+          }
+        });
       }
     }
   });
-};
+
+  return Location;
+}

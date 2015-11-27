@@ -1,21 +1,24 @@
 const VIEWS = {
   INDEX: "index",
-  LOCATION_ADD: "location-add",
-  LOCATION_DELETE: "location-delete"
+  TASK_ADD: "task-add",
+  TASK_DELETE: "task-delete"
 };
 
 export const ROUTES = {
   INDEX: "/",
-  LOCATION_ADD: "/" + VIEWS.LOCATION_ADD,
-  LOCATION_DELETE: "/" + VIEWS.LOCATION_DELETE,
+  TASK_ADD: "/" + VIEWS.TASK_ADD,
+  TASK_DELETE: "/" + VIEWS.TASK_DELETE,
   DB: {
-    LOCATION_ADD: "/db/" + VIEWS.LOCATION_ADD,
-    LOCATION_DELETE: "/db/" + VIEWS.LOCATION_DELETE
+    TASK_ADD: "/db/" + VIEWS.TASK_ADD,
+    TASK_DELETE: "/db/" + VIEWS.TASK_DELETE
   }
 };
 
 const MODELS = {
-  LOCATION: "location"
+  TASK: "task",
+  TASK_ACTION: "taskaction",
+  LOCATION: "location",
+  SUFFIX_ID_FIELD: "Id"
 };
 
 const CONSTANTS = {
