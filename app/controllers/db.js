@@ -39,82 +39,47 @@ router.post(CONSTANTS.ROUTES.DB.TASK_ADD, (req, res, next) => {
     return res.json({error: "did not provide all required params"});
   }
 
-  const taskObj = {
+  db[CONSTANTS.MODELS.TASK].create({
     name: req.body.taskName,
-    cost: req.body.cost
-  };
-
-  const locationObj = {
-    name: req.body.locationName,
-    lat: req.body.lat,
-    lng: req.body.lng,
-    radius: req.body.radius
-  };
-
-  const taskActionObjs = [];
-  req.body.taskActions.forEach(taskAction => {
-    taskActionObjs.push({
-      description: taskAction.description,
-      type: taskAction.type
+    cost: req.body.cost,
+    location: {
+      name: req.body.locationName,
+      lat: req.body.lat,
+      lng: req.body.lng,
+      radius: req.body.radius
+    },
+    taskactions: req.body.taskActions
+  }, {
+    include: [db[CONSTANTS.MODELS.TASK_ACTION], db[CONSTANTS.MODELS.LOCATION]]
+  }).catch(error => {
+    console.log(error.message);
+    return res.json({error: error.message});
+  }).then(createdTask => {
+    createChangeLogPromise(createdTask.id, CONSTANTS.HELPERS.CHANGE_LOG_STATUS_CREATED).then(() => {
+      //gcm.sendMessage(createdTask, (err) => {
+      //  if (err) {
+      //    console.log("failed to send gcm message");
+      //  }
+      //  res.redirect(CONSTANTS.ROUTES.INDEX);
+      //});
+      res.redirect(CONSTANTS.ROUTES.INDEX); //res.json(createdTask);
+    }).catch(error => {
+      console.log(error.message);
+      return res.json({error: error.message});
     });
   });
-
-  // create task
-  db[CONSTANTS.MODELS.TASK].create(taskObj).then(task => {
-      // create taskactions promises
-      const dbPromises = taskActionObjs.map(taskActionObj => {
-        taskActionObj[CONSTANTS.MODELS.TASK + CONSTANTS.HELPERS.SUFFIX_ID_FIELD] = task.id;
-        return db[CONSTANTS.MODELS.TASK_ACTION].create(taskActionObj);
-      });
-
-      // create location promise
-      locationObj[CONSTANTS.MODELS.TASK + CONSTANTS.HELPERS.SUFFIX_ID_FIELD] = task.id;
-      dbPromises.push(db[CONSTANTS.MODELS.LOCATION].create(locationObj));
-
-      // add change log promise
-      dbPromises.push(createChangeLogPromise(task.id, CONSTANTS.HELPERS.CHANGE_LOG_STATUS_CREATED));
-
-      Promise.all(dbPromises).then(() => {
-          db[CONSTANTS.MODELS.TASK].findOne({
-            where: {
-              id: task.id
-            },
-            include: [db[CONSTANTS.MODELS.LOCATION], db[CONSTANTS.MODELS.TASK_ACTION]]
-          }).then(createdTask => {
-              //gcm.sendMessage(taskObj, (err) => {
-              //  if (err) {
-              //    console.log("failed to send gcm message");
-              //  }
-              //  res.redirect(CONSTANTS.ROUTES.INDEX);
-              //});
-              res.redirect(CONSTANTS.ROUTES.INDEX); //res.json(createdTask);
-            })
-            .catch(error => {
-              console.log(error.message);
-              res.json({error: error.message});
-            });
-        })
-        .catch(error => {
-          console.log(error.message);
-          res.json({error: error.message});
-        });
-    })
-    .catch(error => {
-      console.log(error.message);
-      res.json({error: error.message});
-    });
 });
 
 router.get(CONSTANTS.ROUTES.DB.TASK_DELETE + "/:task_id", (req, res, next) => {
   const taskId = req.params.task_id;
 
-  // TODO: need to check if taskactions and locations get deleted too
+  // TODO: also destroy corresponding locations, taskactions, and taskactionresponses
   db[CONSTANTS.MODELS.TASK].destroy({
     where: {
       id: taskId
     },
     include: [db[CONSTANTS.MODELS.LOCATION], db[CONSTANTS.MODELS.TASK_ACTION]]
-  }).then(createChangeLogPromise(taskId, CONSTANTS.HELPERS.CHANGE_LOG_STATUS_DELETED)).then(function () {
+  }).then(createChangeLogPromise(taskId, CONSTANTS.HELPERS.CHANGE_LOG_STATUS_DELETED)).then(() => {
     res.redirect(CONSTANTS.ROUTES.INDEX);
   }).catch(error => {
     console.log(error.message);
@@ -173,16 +138,56 @@ router.get(CONSTANTS.ROUTES.DB.TASK_SYNC, (req, res, next) => {
 });
 
 router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, (req, res, next) => {
-  const taskId = req.body.taskId;
-  const taskActions = [];
+  ;
+  const userId = req.body.userId;
+  const taskActionIds = [];
   for (let key in req.body) {
-    if (key.indexOf("taskId") < 0) {
-      taskActions.push({taskActionId: key, response: req.body[key]});
+    if (key.indexOf("userId") < 0) {
+      taskActionIds.push(key);
     }
   }
-  ;
 
-  res.json({taskSubmission: "success"});
+  if (!userId) {
+    return res.json({error: "userId (email) not provided"});
+  }
+
+  Promise.all([db[CONSTANTS.MODELS.USER].findOne({
+    where: {id: userId}
+  }), db[CONSTANTS.MODELS.TASK_ACTION].findAll({
+    where: {id: taskActionIds}
+  })]).then(args => {
+    const user = args[0];
+    const taskActions = args[1];
+    db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE].bulkCreate(taskActions.map(obj => {
+      return {userId: user.id, taskactionId: obj.id, response: req.body[obj.id]}
+    })).then(() => {
+      res.json({error: "", result: true})
+    }).catch(error => {
+      console.log(error.message);
+      res.json({error: error.message});
+    });
+  });
+});
+
+router.post(CONSTANTS.ROUTES.DB.USER_CREATE, (req, res, next) => {
+  const userId = req.body.userId;
+  const gcmToken = req.body.gcmToken;
+
+  if (!userId) {
+    return res.json({error: "userId (email) not provided"});
+  }
+
+  db[CONSTANTS.MODELS.USER].findOrCreate({
+    where: {id: userId}
+  }).catch(error => {
+    console.log(error.message);
+    res.json({error: error.message});
+  }).then(userCreateResult => {
+    if (gcmToken) {
+      userCreateResult[0].update({gcmToken: gcmToken})
+    }
+    res.json({error: "", result: userCreateResult[1]});
+  });
 });
 
 export default function (app) {

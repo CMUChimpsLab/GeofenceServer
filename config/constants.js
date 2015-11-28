@@ -11,7 +11,8 @@ export const ROUTES = {
     TASK_DELETE: "/db/task-delete",
     TASK_FETCH: "/db/task-fetch",
     TASK_SYNC: "/db/task-sync",
-    TASK_RESPOND: "/db/task-respond"
+    TASK_RESPOND: "/db/task-respond",
+    USER_CREATE: "/db/user-create"
   }
 };
 
@@ -19,7 +20,9 @@ const MODELS = {
   CHANGE_LOG: "changelog",
   TASK: "task",
   TASK_ACTION: "taskaction",
-  LOCATION: "location"
+  TASK_ACTION_RESPONSE: "taskactionresponse",
+  LOCATION: "location",
+  USER: "user"
 };
 
 const HELPERS = {

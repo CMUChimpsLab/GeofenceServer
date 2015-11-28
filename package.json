@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "create-stub": "babel-node ./test/create-stub"
   },
   "dependencies": {
     "body-parser": "^1.13.3",
@@ -19,8 +20,7 @@
     "request": "^2.6.0",
     "sequelize": "^3.5.1",
     "serve-favicon": "^2.3.0",
-    "sqlite3": "^3.0.5",
-    "uid": "0.0.2"
+    "sqlite3": "^3.0.5"
   },
   "devDependencies": {
     "babel": "^5.8.21",

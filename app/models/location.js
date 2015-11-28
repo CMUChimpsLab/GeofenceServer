@@ -11,9 +11,7 @@ export default function (sequelize, DataType) {
       associate: function (models) {
         Location.belongsTo(models[CONSTANTS.MODELS.TASK], {
           onDelete: "CASCADE",
-          foreignKey: {
-            allowNull: false
-          }
+          foreignKey: {allowNull: false}
         });
       }
     }

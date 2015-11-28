@@ -6,7 +6,10 @@ const router = express.Router();
 
 router.get(CONSTANTS.ROUTES.INDEX, (req, res, next) => {
   db[CONSTANTS.MODELS.TASK].findAll({
-    include: [db[CONSTANTS.MODELS.LOCATION], db[CONSTANTS.MODELS.TASK_ACTION]]
+    include: [db[CONSTANTS.MODELS.LOCATION], {
+      model: db[CONSTANTS.MODELS.TASK_ACTION],
+      include: db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE]
+    }]
   }).then(tasks => {
     res.render(CONSTANTS.VIEWS.INDEX, {
       title: 'CrowdsourcingServer - Main',
@@ -25,7 +28,6 @@ router.get(CONSTANTS.ROUTES.TASK_ADD, (req, res, next) => {
     routes: ROUTES
   });
 });
-
 
 export default function (app) {
   app.use("/", router);
