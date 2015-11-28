@@ -7,7 +7,7 @@ export default class GCM {
     this.options = {
       url: "https://gcm-http.googleapis.com/gcm/send",
       method: "POST",
-      json: true, // automatically add "Content-Type": "application/json" to header
+      json: true, // this automatically adds "Content-Type": "application/json" to header
       headers: {
         "Authorization": "key=" + gcmConfig["api_key"]
       }
@@ -22,9 +22,9 @@ export default class GCM {
     };
 
     request(this.options, (error, response, body) => {
-      console.log("response.statusCode: " + response.statusCode);
-      console.dir(body);
-      cb(error);
+      console.log("gcm request finished with response.statusCode: " + response.statusCode);
+      console.dir("gcm request response: " + body);
+      cb(error, body);
     });
   }
 }

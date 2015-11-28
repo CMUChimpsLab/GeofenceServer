@@ -56,13 +56,12 @@ router.post(CONSTANTS.ROUTES.DB.TASK_ADD, (req, res, next) => {
     return res.json({error: error.message});
   }).then(createdTask => {
     createChangeLogPromise(createdTask.id, CONSTANTS.HELPERS.CHANGE_LOG_STATUS_CREATED).then(() => {
-      //gcm.sendMessage(createdTask, (err) => {
-      //  if (err) {
-      //    console.log("failed to send gcm message");
-      //  }
-      //  res.redirect(CONSTANTS.ROUTES.INDEX);
-      //});
-      res.redirect(CONSTANTS.ROUTES.INDEX); //res.json(createdTask);
+      gcm.sendMessage({name: createdTask.name}, (err, response) => {
+        if (err) {
+          console.log("failed to send gcm message");
+        }
+        res.redirect(CONSTANTS.ROUTES.INDEX);
+      });
     }).catch(error => {
       console.log(error.message);
       return res.json({error: error.message});
@@ -138,7 +137,6 @@ router.get(CONSTANTS.ROUTES.DB.TASK_SYNC, (req, res, next) => {
 });
 
 router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, (req, res, next) => {
-  ;
   const userId = req.body.userId;
   const taskActionIds = [];
   for (let key in req.body) {
@@ -158,6 +156,12 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, (req, res, next) => {
   })]).then(args => {
     const user = args[0];
     const taskActions = args[1];
+
+    if (!user) {
+      console.log("provided user does not exist");
+      res.json({error: "provided user does not exist"});
+    }
+
     db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE].bulkCreate(taskActions.map(obj => {
       return {userId: user.id, taskactionId: obj.id, response: req.body[obj.id]}
     })).then(() => {
