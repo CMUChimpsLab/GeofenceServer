@@ -35,8 +35,17 @@ function createChangeLogPromise(taskId, status) {
 }
 
 router.post(CONSTANTS.ROUTES.DB.TASK_ADD, (req, res, next) => {
+  if (!req.body['taskActions']) {
+    return res.json({error: "Must provide at least one Action."});
+  }
   if (!hasAllRequiredParameters(req.body)) {
     return res.json({error: "did not provide all required params"});
+  }
+  if (!parseFloat(req.body['cost'])) {
+    return res.json({error: "Cost must be a number (in dollars)."});
+  }
+  if (!parseFloat(req.body['lat']) || !parseFloat(req.body['lng'])) {
+    return res.json({error: "Lat and Lng must both be numbers."});
   }
 
   db[CONSTANTS.MODELS.TASK].create({

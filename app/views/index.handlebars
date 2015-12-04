@@ -8,17 +8,15 @@
       <li class="task">
         <h2>Task</h2>
         <p>Name: {{name}}</p>
-        <p>Cost: {{cost}}</p>
-        <br>
+        <p>Cost (dollars): {{cost}}</p>
 
         <h2>Location</h2>
         <p>
           <p>Name: {{location.name}}</p>
           <p>Lat: {{location.lat}}</p>
           <p>Lng: {{location.lng}}</p>
-          <p>Radius: {{location.radius}}</p>
+          <p>Radius (meters): {{location.radius}}</p>
         </p>
-        <br>
 
         <h2>Task Actions</h2>
         <p>
@@ -29,7 +27,6 @@
             {{/each}}
           {{/each}}
         </p>
-        <br>
 
         <p>{{formatDate createdAt day="numeric" month="long" year="numeric"}}</p>
         <br>
