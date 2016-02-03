@@ -13,7 +13,7 @@ The `api_key` field should have the correct API key value that was obtained whil
 
 ## How to Run
 
-Start the server by running `gulp` or `npm start` inside the root directory.
+Start the server by running `gulp` or `npm start` inside the root directory. (if you need `gulp`, install it like so: `npm install --global gulp-cli`
 
 ## Features
 

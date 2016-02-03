@@ -3,6 +3,8 @@ var gulp = require('gulp'),
   plumber = require('gulp-plumber'),
   livereload = require('gulp-livereload'),
   less = require('gulp-less');
+var mocha = require('gulp-mocha');
+var gutil = require('gulp-util');
 
 gulp.task('less', function () {
   gulp.src('./public/css/*.less')
@@ -32,6 +34,16 @@ gulp.task('develop', function () {
     this.stdout.pipe(process.stdout);
     this.stderr.pipe(process.stderr);
   });
+});
+
+gulp.task('mocha', function() {
+    return gulp.src(['test/test*.js'], { read: false })
+        .pipe(mocha({ reporter: 'list' }))
+        .on('error', gutil.log);
+});
+
+gulp.task('watch-mocha', function() {
+    gulp.watch(['lib/**', 'test/**'], ['mocha']);
 });
 
 gulp.task('default', [
