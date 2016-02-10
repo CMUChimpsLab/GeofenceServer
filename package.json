@@ -23,9 +23,11 @@
     "sqlite3": "^3.0.5"
   },
   "devDependencies": {
-    "babel": "^5.8.21",
+    "babel": "5.8.34",
+    "babel-cli": "^6.4.5",
     "es6-module-loader": "^0.17.8",
     "gulp": "^3.9.0",
+    "gulp-babel": "^6.1.2",
     "gulp-less": "^3.0.1",
     "gulp-livereload": "^3.8.0",
     "gulp-nodemon": "^2.0.2",

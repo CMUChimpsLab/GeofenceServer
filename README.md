@@ -15,6 +15,10 @@ The `api_key` field should have the correct API key value that was obtained whil
 
 Start the server by running `gulp` or `npm start` inside the root directory. (if you need `gulp`, install it like so: `npm install --global gulp-cli`
 
+## How to run tests
+
+Run `gulp mocha` inside the root directory. It will test everything in `test/test*.js`.
+
 ## Features
 
 - Lets you manage geofences (e.g. adding, deleting) and push changes to all connected client apps.

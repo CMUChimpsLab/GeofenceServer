@@ -1,5 +1,6 @@
 import CONSTANTS from "../../config/constants";
 
+// TODO addd the task creator.
 export default function (sequelize, DataType) {
   const Task = sequelize.define(CONSTANTS.MODELS.TASK, {
     name: {type: DataType.STRING, allowNull: false},
