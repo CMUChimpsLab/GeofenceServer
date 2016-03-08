@@ -21,8 +21,7 @@ describe('GET /', function() {
 })
  
 describe('POST /db/task-add', function() {
-  it('successfully adds a legit task', function(done) {
-    var task = {
+  var task = {
       taskName: 'fake task',
       cost: 0.5,
       locationName: 'Downtown Pittsburgh center',
@@ -30,10 +29,32 @@ describe('POST /db/task-add', function() {
       lng: -80,
       radius: 60,
       taskActions: [{'description': 'how many dogs are here now?', type: 'text'}]
-      };
+    };
+
+  it('successfully adds a legit task', function(done) {
     server.post('/db/task-add')
       .send(task)
       .expect(200)
-      .end(function(err, res) {done();});
+      .end(function(err, res) {
+        // Make sure it was actually added by fetching it too.
+        var createdTaskId = res.body['createdTaskId'];
+        server.get('/db/task-fetch?taskId=' + createdTaskId)
+          .expect(200)
+          .end(function(err, res) {
+            res['body'][0]['name'].should.equal('fake task');
+            done();
+          });
+      });
+  });
+
+  // TODO this is not great, the validation logic should be tested w/o starting
+  // a whole new HTTP request/response.
+  it('fails when the task is somehow bad', function(done) {
+    task['lat'] = 'not a number';
+    server.post('/db/task-add').send(task)
+      .end(function(err, res) {
+        res['body']['error'].should.be.ok();
+        done();
+      });
   });
 });

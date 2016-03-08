@@ -75,6 +75,7 @@ router.post(CONSTANTS.ROUTES.DB.TASK_ADD, (req, res, next) => {
       console.log(error.message);
       return res.json({error: error.message});
     });
+    return res.json({createdTaskId: createdTask.id});
   });
 });
 
