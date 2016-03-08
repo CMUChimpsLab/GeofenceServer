@@ -32,6 +32,7 @@
     "gulp-livereload": "^3.8.0",
     "gulp-nodemon": "^2.0.2",
     "gulp-plumber": "^1.0.0",
+    "supertest": "^1.2.0",
     "systemjs": "^0.19.5"
   }
 }
