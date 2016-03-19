@@ -6,9 +6,15 @@ import GCM from "../helpers/gcm";
 const router = express.Router();
 const gcm = new GCM();
 
-// TODO: perform type checking (whether in here or in model)
+/**
+ * Checks if all required parameters have been provided when attempting to create a task.
+ * TODO: perform better type and argument checking (whether in here or in model)
+ *
+ * @param body of the network request
+ * @returns {boolean} true if all required parameters have been given
+ */
 function hasAllRequiredParameters(body) {
-  const requiredParams = ["taskName", "cost", "locationName", "lat", "lng", "radius", "taskActions"];
+  const requiredParams = ["taskName", "cost", "expiresAt", "locationName", "lat", "lng", "radius", "taskActions"];
   for (let i = 0; i < requiredParams.length; i++) {
     if (!body[requiredParams[i]]) {
       return false;
@@ -27,6 +33,14 @@ function hasAllRequiredParameters(body) {
   return true;
 }
 
+/**
+ * Writes to the ChangeLog DB about what task had which status change.
+ * The ChangeLog DB is later used when users try to sync with the server.
+ *
+ * @param taskId for task whose status is changing
+ * @param status is one of CONSTANTS.HELPERS.CHANGE_LOG_STATUS_XXXXX
+ * @returns {*|Object|Promise.<Instance>}
+ */
 function createChangeLogPromise(taskId, status) {
   return db[CONSTANTS.MODELS.CHANGE_LOG].create({
     taskId: taskId,
@@ -34,7 +48,17 @@ function createChangeLogPromise(taskId, status) {
   });
 }
 
-router.post(CONSTANTS.ROUTES.DB.TASK_ADD, (req, res, next) => {
+/**
+ * Middleware for checking if userId was passed over.
+ * Should be used for all POST routes.
+ */
+function checkIfUserIdProvided(req, res, next) {
+  if (!req.body.userId) return res.json({error: "userId (email) not provided"});
+  else next();
+}
+
+router.post(CONSTANTS.ROUTES.DB.TASK_ADD, checkIfUserIdProvided, (req, res, next) => {
+  const userId = req.body.userId;
   if (!req.body['taskActions']) {
     return res.json({error: "Must provide at least one Action."});
   }
@@ -49,8 +73,10 @@ router.post(CONSTANTS.ROUTES.DB.TASK_ADD, (req, res, next) => {
   }
 
   db[CONSTANTS.MODELS.TASK].create({
+    userId: userId,
     name: req.body.taskName,
     cost: req.body.cost,
+    expiresAt: req.body.expiresAt,
     location: {
       name: req.body.locationName,
       lat: req.body.lat,
@@ -69,13 +95,12 @@ router.post(CONSTANTS.ROUTES.DB.TASK_ADD, (req, res, next) => {
         if (err) {
           console.log("failed to send gcm message");
         }
-        res.redirect(CONSTANTS.ROUTES.INDEX);
+        return res.json({createdTaskId: createdTask.id});
       });
     }).catch(error => {
       console.log(error.message);
       return res.json({error: error.message});
     });
-    return res.json({createdTaskId: createdTask.id});
   });
 });
 
@@ -110,7 +135,10 @@ router.get(CONSTANTS.ROUTES.DB.TASK_FETCH, (req, res, next) => {
     where: {
       id: requestedFetchTaskIds
     },
-    include: [db[CONSTANTS.MODELS.LOCATION], db[CONSTANTS.MODELS.TASK_ACTION]]
+    include: [db[CONSTANTS.MODELS.LOCATION], {
+      model: db[CONSTANTS.MODELS.TASK_ACTION],
+      include: db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE]
+    }]
   }).then(fetchedTasks => {
     res.json(fetchedTasks);
   }).catch(error => {
@@ -146,17 +174,13 @@ router.get(CONSTANTS.ROUTES.DB.TASK_SYNC, (req, res, next) => {
   });
 });
 
-router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, (req, res, next) => {
+router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, next) => {
   const userId = req.body.userId;
   const taskActionIds = [];
   for (let key in req.body) {
     if (key.indexOf("userId") < 0) {
       taskActionIds.push(key);
     }
-  }
-
-  if (!userId) {
-    return res.json({error: "userId (email) not provided"});
   }
 
   Promise.all([db[CONSTANTS.MODELS.USER].findOne({
@@ -183,13 +207,9 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, (req, res, next) => {
   });
 });
 
-router.post(CONSTANTS.ROUTES.DB.USER_CREATE, (req, res, next) => {
+router.post(CONSTANTS.ROUTES.DB.USER_CREATE, checkIfUserIdProvided, (req, res, next) => {
   const userId = req.body.userId;
   const gcmToken = req.body.gcmToken;
-
-  if (!userId) {
-    return res.json({error: "userId (email) not provided"});
-  }
 
   db[CONSTANTS.MODELS.USER].findOrCreate({
     where: {id: userId}

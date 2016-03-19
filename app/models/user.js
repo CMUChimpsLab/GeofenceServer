@@ -5,11 +5,13 @@ import CONSTANTS from "../../config/constants";
 export default function (sequelize, DataType) {
   const User = sequelize.define(CONSTANTS.MODELS.USER, {
     id: {type: DataType.STRING, primaryKey: true, allowNull: false},
+    balance: {type: DataType.DOUBLE, defaultValue: 20}, // TODO: probably should be able to set dynamically later
     gcmToken: DataType.STRING
   }, {
     classMethods: {
       associate: function (models) {
         User.hasMany(models[CONSTANTS.MODELS.TASK_ACTION_RESPONSE]);
+        User.hasMany(models[CONSTANTS.MODELS.TASK]);
       }
     }
   });

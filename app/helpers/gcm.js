@@ -23,7 +23,7 @@ export default class GCM {
 
     request(this.options, (error, response, body) => {
       console.log("gcm request finished with response.statusCode: " + response.statusCode);
-      console.dir("gcm request response: " + body);
+      console.log("gcm request response:", body);
       cb(error, body);
     });
   }

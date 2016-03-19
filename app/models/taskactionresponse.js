@@ -6,11 +6,11 @@ export default function (sequelize, DataType) {
   }, {
     classMethods: {
       associate: function (models) {
-        TaskActionResponse.belongsTo(models[CONSTANTS.MODELS.USER], {
+        TaskActionResponse.belongsTo(models[CONSTANTS.MODELS.USER], { // creates a `userId` field
           onDelete: "CASCADE",
           foreignKey: {allowNull: false}
         });
-        TaskActionResponse.belongsTo(models[CONSTANTS.MODELS.TASK_ACTION], {
+        TaskActionResponse.belongsTo(models[CONSTANTS.MODELS.TASK_ACTION], { // creates a `taskactionId` field
           onDelete: "CASCADE",
           foreignKey: {allowNull: false}
         });
