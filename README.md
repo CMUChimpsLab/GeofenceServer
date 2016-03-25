@@ -22,3 +22,5 @@ Run `gulp mocha` inside the root directory. It will test everything in `test/tes
 ## Features
 
 - Lets you manage geofences (e.g. adding, deleting) and push changes to all connected client apps.
+
+.babelrc is because of [this error](http://stackoverflow.com/questions/33440405/babel-file-is-copied-without-being-transformed)

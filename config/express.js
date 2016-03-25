@@ -39,7 +39,10 @@ export default function (app, config) {
 
   const controllers = glob.sync(config.root + '/app/controllers/*.js');
   controllers.forEach(controller => {
-    require(controller)(app);
+    require(controller)['default'](app);
+    // This means "for each controller file, load that file using require, then
+    // call the default function that's exported, with app as a parameter.
+    // Those default functions just say 'hey app, use these routes.'"
   });
 
   app.use((req, res, next) => {

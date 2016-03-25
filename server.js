@@ -1,10 +1,10 @@
 /** Only ES5 is allowed in this file! **/
 
 // setup babel
-require("babel/register")({ // will become "babel-core/register" in babel >= 6.0.0
+require("babel-register")({
   extensions: [".es6", ".es", ".jsx", ".js"]
 });
-require("babel/polyfill"); // will become "babel-poyfill" in babel >= 6.0.0
+require("babel-polyfill");
 
 // load your app
 require("./app");
