@@ -7,4 +7,7 @@ require("babel-register")({
 require("babel-polyfill");
 
 // load your app
-require("./app");
+app = require("./app");
+
+// export it for Mocha testing.
+module.exports = app;

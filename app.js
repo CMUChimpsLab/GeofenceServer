@@ -16,4 +16,4 @@ db.sequelize
     throw new Error(e);
   });
 
-export default app;
+module.exports = app;
