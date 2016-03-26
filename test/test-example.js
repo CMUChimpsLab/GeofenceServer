@@ -36,7 +36,6 @@ describe('POST /db/user-create', function() {
         // where "result" is `true` if the user never had a gcmToken before and `false` if otherwise.
         // In other words, sending a request to `/db/user-create` with an existing userId is basically
         // just updating the gcmToken for that user.
-        console.log("response body:", res.body);
         if (res.body.error) throw new Error("error while creating a new user");
         if (!res.body.result) throw new Error("gcmToken somehow existed previously");
       })
@@ -51,7 +50,6 @@ describe('POST /db/user-create', function() {
       .expect(200)
       .expect('Content-Type', /json/)
       .expect(function(res) {
-        console.log("response body:", res.body);
         if (res.body.error) throw new Error("error while accessing an existing user");
         if (res.body.result) throw new Error("gcmToken somehow didn't exist previously");
       })
@@ -59,6 +57,26 @@ describe('POST /db/user-create', function() {
         if(err) return done(err);
         done();
       });
+  });
+  it('successfully fetches a real user', function(done) {
+    server.get('/db/user-fetch')
+      .query({userId: fakeUser.userId})
+      .expect(function(res) {
+        if(res.body['id'] != fakeUser.userId) {
+          throw new Error("Didn't find the user.");
+        }
+      })
+      .end(done);
+  });
+  it('correctly doesn\'t find a user who doesn\'t exist', function(done) {
+    server.get('/db/user-fetch')
+      .query({userId: "not_a_user@seriouslynotauser.com"})
+      .expect(function(res) {
+        if (res.body !== null) {
+          throw new Error("Found a user, even though this user didn't exist.");
+        }
+      })
+      .end(done);
   });
 });
 
@@ -91,8 +109,6 @@ describe('POST /db/task-add', function() {
       });
   });
 
-  // TODO this is not great, the validation logic should be tested w/o starting
-  // a whole new HTTP request/response.
   it('fails when the task is somehow bad', function(done) {
     task['lat'] = 'not a number';
     server.post('/db/task-add').send(task)

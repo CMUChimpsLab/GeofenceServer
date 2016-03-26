@@ -224,6 +224,23 @@ router.post(CONSTANTS.ROUTES.DB.USER_CREATE, checkIfUserIdProvided, (req, res, n
   });
 });
 
+router.get(CONSTANTS.ROUTES.DB.USER_FETCH, (req, res, next) => {
+  const userId = req.query['userId'];
+ 
+  db[CONSTANTS.MODELS.USER].findOne({
+    where: {
+      id: userId
+    }
+  }).then(fetchedUser => {
+    res.json(fetchedUser);
+  }).catch(error => {
+    console.log(error.message);
+    res.json({error: error.message});
+  });
+
+});
+
+
 export default function (app) {
   app.use("/", router);
 };

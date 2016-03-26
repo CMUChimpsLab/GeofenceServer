@@ -5,7 +5,8 @@ import config from "../../config/config";
 
 const db = {};
 const sequelize = new Sequelize(config.db, {
-  storage: config.storage
+  storage: config.storage,
+  logging: function() {} // Stop logging, it's a pain to read through.
 });
 
 fs.readdirSync(__dirname).filter(file => {
