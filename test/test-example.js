@@ -12,6 +12,13 @@ var fakeUser = {
   gcmToken: uniqueToken
 };
 
+var uniqueToken2 = new Date().getTime() + "_2";
+var fakeUser2 = {
+  userId: uniqueToken2+"@domain.com",
+  gcmToken: uniqueToken2
+};
+
+
 describe('GET /', function() {
   it('responds with a 200', function(done) {
     server.get('/')
@@ -108,7 +115,6 @@ describe('POST /db/task-add', function() {
           });
       });
   });
-
   it('fails when the task is somehow bad', function(done) {
     task['lat'] = 'not a number';
     server.post('/db/task-add').send(task)
@@ -117,4 +123,47 @@ describe('POST /db/task-add', function() {
         done();
       });
   });
+});
+
+describe('POST /db/task-respond', function() {
+  var task = {
+      userId: fakeUser.userId,
+      taskName: 'new fake task',
+      cost: 0.5,
+      expiresAt: new Date(),
+      locationName: 'Downtown Pittsburgh center',
+      lat: 40.4416667,
+      lng: -80,
+      radius: 60,
+      taskActions: [{'description': 'how many dogs are here now?', type: 'text'}]
+  };
+  it("Responds to a task", function(done) {
+    // first, make sure fakeUser2 exists (fakeUser was created previously
+    server.post('/db/user-create')
+      .send(fakeUser2)
+      .expect(200)
+      .end(function (err, res) {
+        // then fakeUser creates a task
+        server.post('/db/task-add')
+          .send(task)
+          .expect(200)
+          .end(function(err, res) {
+            action1Id = res.body['createdTaskActions'][0]['id'];
+            console.log("Looking for this task action ID: " + action1Id);
+            // Then fakeUser2 responds to it.
+            var taskResponse = {
+              userId: fakeUser2.userId,
+              taskActionIds: [action1Id]
+            }
+            server.post('/db/task-respond')
+              .send(taskResponse)
+              .expect(200)
+              .end(function(err, res) {
+                // TODO assert stuff
+                done();
+              });
+          });
+      });
+  });
+
 });

@@ -53,8 +53,12 @@ function createChangeLogPromise(taskId, status) {
  * Should be used for all POST routes.
  */
 function checkIfUserIdProvided(req, res, next) {
-  if (!req.body.userId) return res.json({error: "userId (email) not provided"});
-  else next();
+  if (!req.body.userId) {
+    res.json({error: "userId (email) not provided"});
+    res.end();
+  } else {
+    next();
+  }
 }
 
 router.post(CONSTANTS.ROUTES.DB.TASK_ADD, checkIfUserIdProvided, (req, res, next) => {
@@ -95,7 +99,10 @@ router.post(CONSTANTS.ROUTES.DB.TASK_ADD, checkIfUserIdProvided, (req, res, next
         if (err) {
           console.log("failed to send gcm message");
         }
-        return res.json({createdTaskId: createdTask.id});
+        res.json({
+          createdTaskId: createdTask.id,
+          createdTaskActions: createdTask.taskactions
+        });
       });
     }).catch(error => {
       console.log(error.message);
@@ -176,7 +183,7 @@ router.get(CONSTANTS.ROUTES.DB.TASK_SYNC, (req, res, next) => {
 
 router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, next) => {
   const userId = req.body.userId;
-  const taskActionIds = [];
+  const taskActionIds = req.body.taskActionIds;
   for (let key in req.body) {
     if (key.indexOf("userId") < 0) {
       taskActionIds.push(key);
@@ -196,6 +203,8 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, 
       res.json({error: "provided user does not exist"});
     }
 
+    console.log("task expiration time is:" )
+    
     db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE].bulkCreate(taskActions.map(obj => {
       return {userId: user.id, taskactionId: obj.id, response: req.body[obj.id]}
     })).then(() => {
