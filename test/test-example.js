@@ -87,6 +87,7 @@ describe('POST /db/user-create', function() {
   });
 });
 
+var createdTaskId;
 describe('POST /db/task-add', function() {
   var task = {
       userId: fakeUser.userId,
@@ -106,7 +107,7 @@ describe('POST /db/task-add', function() {
       .expect(200)
       .end(function(err, res) {
         // Make sure it was actually added by fetching it too.
-        var createdTaskId = res.body['createdTaskId'];
+        createdTaskId = res.body['createdTaskId'];
         server.get('/db/task-fetch?taskId=' + createdTaskId)
           .expect(200)
           .end(function(err, res) {
@@ -126,17 +127,20 @@ describe('POST /db/task-add', function() {
 });
 
 describe('POST /db/task-respond', function() {
+  var laterDate = new Date();
+  laterDate.setMinutes(61); // so it will be at least some time in the future
   var task = {
       userId: fakeUser.userId,
       taskName: 'new fake task',
       cost: 0.5,
-      expiresAt: new Date(),
+      expiresAt: laterDate,
       locationName: 'Downtown Pittsburgh center',
       lat: 40.4416667,
       lng: -80,
       radius: 60,
       taskActions: [{'description': 'how many dogs are here now?', type: 'text'}]
   };
+  var action1Id;
   it("Responds to a task", function(done) {
     // first, make sure fakeUser2 exists (fakeUser was created previously
     server.post('/db/user-create')
@@ -159,7 +163,8 @@ describe('POST /db/task-respond', function() {
             server.post('/db/task-respond')
               .send(taskResponse)
               .end(function(err, res) {
-                res.body['result'].should.be.true();
+                console.log(res.body);
+                should(res.body['result']).be.true();
                 // No in-depth checks here, just it should send the "ok" signal.
                 // TODO maybe we can shorten this test b/c there was already
                 // a task created, maybe we can just respond to that one.
@@ -168,5 +173,25 @@ describe('POST /db/task-respond', function() {
           });
       });
   });
+  it("Fails a response if the task has expired", function(done) {
+    // createdTaskId; // got this from a test above.
+    server.get('/db/task-fetch?taskId=' + createdTaskId)
+      .end(function(err, res) {
+        var taskactionId = res.body[0].taskactions[0].id;
+        var taskResponse = {
+          userId: fakeUser2.userId,
+          taskActionIds: [taskactionId],
+          responses: {}
+        }
+        taskResponse['responses'][taskactionId] = "two dogs";
+        server.post('/db/task-respond')
+          .send(taskResponse)
+          .end(function(err, res) {
+            console.log(res.body);
+            should(res.body['error']).not.be.undefined();
+            done();
+          });
+      });
+    });
 
 });

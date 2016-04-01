@@ -185,11 +185,6 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, 
   const userId = req.body.userId;
   const taskActionIds = req.body.taskActionIds;
   const taskActionResponses = req.body.responses; // map: id -> text/number/whatever
-  for (let key in req.body) {
-    if (key.indexOf("userId") < 0) {
-      taskActionIds.push(key);
-    }
-  }
 
   Promise.all([db[CONSTANTS.MODELS.USER].findOne({
     where: {id: userId}
@@ -204,13 +199,28 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, 
       res.json({error: "provided user does not exist"});
     }
 
-    db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE].bulkCreate(taskActions.map(obj => {
-      return {userId: user.id, taskactionId: obj.id, response: taskActionResponses[obj.id]}
-    })).then(() => {
-      res.json({error: "", result: true})
-    }).catch(error => {
-      console.log(error.message);
-      res.json({error: error.message});
+    Promise.all([db[CONSTANTS.MODELS.TASK].findOne({
+      where: {id: taskActions[0]['taskId']}
+    })]).then(args => {
+      var exp_time = args[0]['expiresAt'];
+      var now = new Date();
+      
+      console.log("exp time: " + exp_time);
+      console.log("now: " + now);
+      console.log("ok? " + (now < exp_time));
+      if (now > exp_time) {
+        console.log("Task has expired at: " + exp_time);
+        res.json({error: "Task has expired at: " + exp_time});
+      }
+   
+      db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE].bulkCreate(taskActions.map(obj => {
+        return {userId: user.id, taskactionId: obj.id, response: taskActionResponses[obj.id]}
+      })).then(() => {
+        res.json({error: "", result: true})
+      }).catch(error => {
+        console.log(error.message);
+        res.json({error: error.message});
+      });
     });
   });
 });
