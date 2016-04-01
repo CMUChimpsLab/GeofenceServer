@@ -184,6 +184,7 @@ router.get(CONSTANTS.ROUTES.DB.TASK_SYNC, (req, res, next) => {
 router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, next) => {
   const userId = req.body.userId;
   const taskActionIds = req.body.taskActionIds;
+  const taskActionResponses = req.body.responses; // map: id -> text/number/whatever
   for (let key in req.body) {
     if (key.indexOf("userId") < 0) {
       taskActionIds.push(key);
@@ -203,10 +204,8 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, 
       res.json({error: "provided user does not exist"});
     }
 
-    console.log("task expiration time is:" )
-    
     db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE].bulkCreate(taskActions.map(obj => {
-      return {userId: user.id, taskactionId: obj.id, response: req.body[obj.id]}
+      return {userId: user.id, taskactionId: obj.id, response: taskActionResponses[obj.id]}
     })).then(() => {
       res.json({error: "", result: true})
     }).catch(error => {

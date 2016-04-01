@@ -149,17 +149,20 @@ describe('POST /db/task-respond', function() {
           .expect(200)
           .end(function(err, res) {
             action1Id = res.body['createdTaskActions'][0]['id'];
-            console.log("Looking for this task action ID: " + action1Id);
             // Then fakeUser2 responds to it.
             var taskResponse = {
               userId: fakeUser2.userId,
-              taskActionIds: [action1Id]
+              taskActionIds: [action1Id],
+              responses: {}
             }
+            taskResponse['responses'][action1Id] = "three dogs";
             server.post('/db/task-respond')
               .send(taskResponse)
-              .expect(200)
               .end(function(err, res) {
-                // TODO assert stuff
+                res.body['result'].should.be.true();
+                // No in-depth checks here, just it should send the "ok" signal.
+                // TODO maybe we can shorten this test b/c there was already
+                // a task created, maybe we can just respond to that one.
                 done();
               });
           });
