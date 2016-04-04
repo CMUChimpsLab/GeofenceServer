@@ -200,43 +200,38 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, 
     }
 
     Promise.all([db[CONSTANTS.MODELS.TASK].findOne({
-      where: {id: taskActions[0]['taskId']}
+      where: {id: taskActions[0]['taskId']},
+      include: [db[CONSTANTS.MODELS.USER],db[CONSTANTS.MODELS.TASK_ACTION]]
     })]).then(args => {
       var task = args[0]
       var userid = task.userId
-       Promise.all([db[CONSTANTS.MODELS.USER].findOne({
-        where: {id: userid}
-      }),db[CONSTANTS.MODELS.TASK_ACTION].findAll({
-        where: {taskId: taskActions[0]['taskId']}
-      })]).then(args => {
-        var requestingUser = args[0]
-        var officialTaskList = args[1]
-        var exp_time = task['expiresAt'];
-        var now = new Date();
+      var requestingUser = task.user
+      var officialTaskList = task.taskactions
+      var exp_time = task['expiresAt'];
+      var now = new Date();
         
-        if (now > exp_time) {
-            console.log("Task has expired at: " + exp_time);
-            res.json({error: "Task has expired at: " + exp_time});
-        } else if (requestingUser.balance - task.cost < 0) {
-            console.log("The user does not have the funds to pay");
-            res.json({error: "The user does not have the funds to pay"});
-        } else if (taskActions.length < officialTaskList.length) {
-            console.log("User did not answer all parts of the task");
-            res.json({error: "User did not answer all parts of the task"});
-        } else {
-            requestingUser.update({balance: requestingUser.balance - task.cost})
-            answeringUser.update({balance: answeringUser.balance + task.cost})
-            
-            db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE].bulkCreate(taskActions.map(obj => {
-                return {userId: answeringUser.id, taskactionId: obj.id, response: taskActionResponses[obj.id]}
-            })).then(() => {
-                res.json({error: "", result: true})
-            }).catch(error => {
-                console.log(error.message);
-                res.json({error: error.message});
-            });
-        }
-      });
+    if (now > exp_time) {
+        console.log("Task has expired at: " + exp_time);
+        res.json({error: "Task has expired at: " + exp_time});
+    } else if (requestingUser.balance - task.cost < 0) {
+        console.log("The user does not have the funds to pay");
+        res.json({error: "The user does not have the funds to pay"});
+    } else if (taskActions.length < officialTaskList.length) {
+        console.log("User did not answer all parts of the task");
+        res.json({error: "User did not answer all parts of the task"});
+    } else {
+        requestingUser.update({balance: requestingUser.balance - task.cost})
+        answeringUser.update({balance: answeringUser.balance + task.cost})
+        
+        db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE].bulkCreate(taskActions.map(obj => {
+            return {userId: answeringUser.id, taskactionId: obj.id, response: taskActionResponses[obj.id]}
+        })).then(() => {
+            res.json({error: "", result: true})
+        }).catch(error => {
+            console.log(error.message);
+            res.json({error: error.message});
+        });
+    }
     });
   });
 });
