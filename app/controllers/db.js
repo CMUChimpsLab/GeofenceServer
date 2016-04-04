@@ -191,10 +191,10 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, 
   }), db[CONSTANTS.MODELS.TASK_ACTION].findAll({
     where: {id: taskActionIds}
   })]).then(args => {
-    const user = args[0];
+    const answeringUser = args[0];
     const taskActions = args[1];
 
-    if (!user) {
+    if (!answeringUser) {
       console.log("provided user does not exist");
       res.json({error: "provided user does not exist"});
     }
@@ -202,24 +202,40 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, 
     Promise.all([db[CONSTANTS.MODELS.TASK].findOne({
       where: {id: taskActions[0]['taskId']}
     })]).then(args => {
-      var exp_time = args[0]['expiresAt'];
-      var now = new Date();
-      
-      console.log("exp time: " + exp_time);
-      console.log("now: " + now);
-      console.log("ok? " + (now < exp_time));
-      if (now > exp_time) {
-        console.log("Task has expired at: " + exp_time);
-        res.json({error: "Task has expired at: " + exp_time});
-      }
-   
-      db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE].bulkCreate(taskActions.map(obj => {
-        return {userId: user.id, taskactionId: obj.id, response: taskActionResponses[obj.id]}
-      })).then(() => {
-        res.json({error: "", result: true})
-      }).catch(error => {
-        console.log(error.message);
-        res.json({error: error.message});
+      var task = args[0]
+      var userid = task.userId
+       Promise.all([db[CONSTANTS.MODELS.USER].findOne({
+        where: {id: userid}
+      }),db[CONSTANTS.MODELS.TASK_ACTION].findAll({
+        where: {taskId: taskActions[0]['taskId']}
+      })]).then(args => {
+        var requestingUser = args[0]
+        var officialTaskList = args[1]
+        var exp_time = task['expiresAt'];
+        var now = new Date();
+        
+        if (now > exp_time) {
+            console.log("Task has expired at: " + exp_time);
+            res.json({error: "Task has expired at: " + exp_time});
+        } else if (requestingUser.balance - task.cost < 0) {
+            console.log("The user does not have the funds to pay");
+            res.json({error: "The user does not have the funds to pay"});
+        } else if (taskActions.length < officialTaskList.length) {
+            console.log("User did not answer all parts of the task");
+            res.json({error: "User did not answer all parts of the task"});
+        } else {
+            requestingUser.update({balance: requestingUser.balance - task.cost})
+            answeringUser.update({balance: answeringUser.balance + task.cost})
+            
+            db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE].bulkCreate(taskActions.map(obj => {
+                return {userId: answeringUser.id, taskactionId: obj.id, response: taskActionResponses[obj.id]}
+            })).then(() => {
+                res.json({error: "", result: true})
+            }).catch(error => {
+                console.log(error.message);
+                res.json({error: error.message});
+            });
+        }
       });
     });
   });
@@ -228,6 +244,7 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, 
 router.post(CONSTANTS.ROUTES.DB.USER_CREATE, checkIfUserIdProvided, (req, res, next) => {
   const userId = req.body.userId;
   const gcmToken = req.body.gcmToken;
+  const balance = req.body.balance ? req.body.balance : CONSTANTS.DEFAULT_BALANCE;
 
   db[CONSTANTS.MODELS.USER].findOrCreate({
     where: {id: userId}
@@ -235,6 +252,7 @@ router.post(CONSTANTS.ROUTES.DB.USER_CREATE, checkIfUserIdProvided, (req, res, n
     console.log(error.message);
     res.json({error: error.message});
   }).then(userCreateResult => {
+    userCreateResult[0].update({balance: balance}) 
     if (gcmToken) {
       userCreateResult[0].update({gcmToken: gcmToken})
     }
