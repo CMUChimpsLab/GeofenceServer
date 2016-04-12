@@ -14,9 +14,10 @@ const gcm = new GCM();
  * @returns {boolean} true if all required parameters have been given
  */
 function hasAllRequiredParameters(body) {
-  const requiredParams = ["taskName", "cost", "expiresAt", "locationName", "lat", "lng", "radius", "taskActions"];
+  const requiredParams = ["taskName", "cost", "expiresAt", "locationName", "lat", "lng", "radius", "taskActions", "refreshRate"];
   for (let i = 0; i < requiredParams.length; i++) {
     if (!body[requiredParams[i]]) {
+      console.log(requiredParams[i])
       return false;
     }
   }
@@ -65,50 +66,50 @@ router.post(CONSTANTS.ROUTES.DB.TASK_ADD, checkIfUserIdProvided, (req, res, next
   const userId = req.body.userId;
   if (!req.body['taskActions']) {
     return res.json({error: "Must provide at least one Action."});
-  }
-  if (!hasAllRequiredParameters(req.body)) {
+  } else if (!hasAllRequiredParameters(req.body)) {
     return res.json({error: "did not provide all required params"});
-  }
-  if (!parseFloat(req.body['cost'])) {
+  } else if (!parseFloat(req.body['cost'])) {
     return res.json({error: "Cost must be a number (in dollars)."});
-  }
-  if (!parseFloat(req.body['lat']) || !parseFloat(req.body['lng'])) {
+  } else if (!parseFloat(req.body['lat']) || !parseFloat(req.body['lng'])) {
     return res.json({error: "Lat and Lng must both be numbers."});
-  }
-
-  db[CONSTANTS.MODELS.TASK].create({
-    userId: userId,
-    name: req.body.taskName,
-    cost: req.body.cost,
-    expiresAt: req.body.expiresAt,
-    location: {
-      name: req.body.locationName,
-      lat: req.body.lat,
-      lng: req.body.lng,
-      radius: req.body.radius
-    },
-    taskactions: req.body.taskActions
-  }, {
-    include: [db[CONSTANTS.MODELS.TASK_ACTION], db[CONSTANTS.MODELS.LOCATION]]
-  }).catch(error => {
-    console.log(error.message);
-    return res.json({error: error.message});
-  }).then(createdTask => {
-    createChangeLogPromise(createdTask.id, CONSTANTS.HELPERS.CHANGE_LOG_STATUS_CREATED).then(() => {
-      gcm.sendMessage({name: createdTask.name}, (err, response) => {
-        if (err) {
-          console.log("failed to send gcm message");
-        }
-        res.json({
-          createdTaskId: createdTask.id,
-          createdTaskActions: createdTask.taskactions
-        });
-      });
+  } else {
+    db[CONSTANTS.MODELS.TASK].create({
+      userId: userId,
+      name: req.body.taskName,
+      cost: req.body.cost,
+      refreshRate: req.body.refreshRate,
+      expiresAt: req.body.expiresAt,
+      location: {
+        name: req.body.locationName,
+        lat: req.body.lat,
+        lng: req.body.lng,
+        radius: req.body.radius
+      },
+      taskactions: req.body.taskActions
+    }, {
+      include: [db[CONSTANTS.MODELS.TASK_ACTION], db[CONSTANTS.MODELS.LOCATION]]
     }).catch(error => {
+      console.log("ERRROR1")
       console.log(error.message);
       return res.json({error: error.message});
+    }).then(createdTask => {
+      createChangeLogPromise(createdTask.id, CONSTANTS.HELPERS.CHANGE_LOG_STATUS_CREATED).then(() => {
+        gcm.sendMessage({name: createdTask.name}, (err, response) => {
+          if (err) {
+            console.log("failed to send gcm message");
+          }
+          res.json({
+            createdTaskId: createdTask.id,
+            createdTaskActions: createdTask.taskactions
+          });
+        });
+      }).catch(error => {
+        console.log("ERRROR2")
+        console.log(error.message);
+        return res.json({error: error.message});
+      });
     });
-  });
+  }
 });
 
 router.get(CONSTANTS.ROUTES.DB.TASK_DELETE + "/:task_id", (req, res, next) => {
@@ -119,7 +120,7 @@ router.get(CONSTANTS.ROUTES.DB.TASK_DELETE + "/:task_id", (req, res, next) => {
     where: {
       id: taskId
     },
-    include: [db[CONSTANTS.MODELS.LOCATION], db[CONSTANTS.MODELS.TASK_ACTION]]
+    include: [db[CONSTANTS.MODELS.LOCATION], db[CONSTANTS.MODELS.TASK_RESPONSE]]
   }).then(createChangeLogPromise(taskId, CONSTANTS.HELPERS.CHANGE_LOG_STATUS_DELETED)).then(() => {
     res.redirect(CONSTANTS.ROUTES.INDEX);
   }).catch(error => {
@@ -142,10 +143,7 @@ router.get(CONSTANTS.ROUTES.DB.TASK_FETCH, (req, res, next) => {
     where: {
       id: requestedFetchTaskIds
     },
-    include: [db[CONSTANTS.MODELS.LOCATION], {
-      model: db[CONSTANTS.MODELS.TASK_ACTION],
-      include: db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE]
-    }]
+    include: [db[CONSTANTS.MODELS.LOCATION], db[CONSTANTS.MODELS.TASK_RESPONSE]]
   }).then(fetchedTasks => {
     res.json(fetchedTasks);
   }).catch(error => {
@@ -183,56 +181,49 @@ router.get(CONSTANTS.ROUTES.DB.TASK_SYNC, (req, res, next) => {
 
 router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, next) => {
   const userId = req.body.userId;
-  const taskActionIds = req.body.taskActionIds;
+  const taskId = req.body.taskId;
   const taskActionResponses = req.body.responses; // map: id -> text/number/whatever
-
+  
+  console.log("RECEIVED A TASK RESPONES")
   Promise.all([db[CONSTANTS.MODELS.USER].findOne({
     where: {id: userId}
-  }), db[CONSTANTS.MODELS.TASK_ACTION].findAll({
-    where: {id: taskActionIds}
+  }), db[CONSTANTS.MODELS.TASK].findOne({
+    where: {id: taskId},
+    include: [db[CONSTANTS.MODELS.USER],{model: db[CONSTANTS.MODELS.TASK_RESPONSE], order: '"createdAt" DESC' }]
   })]).then(args => {
     const answeringUser = args[0];
-    const taskActions = args[1];
-
+    const task = args[1];
+    // console.log("FOUND ANSWERING USER")
+    // console.log(answeringUser.id)
+    // console.log("FOUND TASK")
+    // console.log(task);
     if (!answeringUser) {
       console.log("provided user does not exist");
       res.json({error: "provided user does not exist"});
     }
-
-    Promise.all([db[CONSTANTS.MODELS.TASK].findOne({
-      where: {id: taskActions[0]['taskId']},
-      include: [db[CONSTANTS.MODELS.USER],db[CONSTANTS.MODELS.TASK_ACTION]]
-    })]).then(args => {
-      var task = args[0]
-      var userid = task.userId
-      var requestingUser = task.user
-      var officialTaskList = task.taskactions
-      var exp_time = task['expiresAt'];
-      var now = new Date();
-        
-    if (now > exp_time) {
-        console.log("Task has expired at: " + exp_time);
-        res.json({error: "Task has expired at: " + exp_time});
-    } else if (requestingUser.balance - task.cost < 0) {
-        console.log("The user does not have the funds to pay");
-        res.json({error: "The user does not have the funds to pay"});
-    } else if (taskActions.length < officialTaskList.length) {
-        console.log("User did not answer all parts of the task");
-        res.json({error: "User did not answer all parts of the task"});
-    } else {
-        requestingUser.update({balance: requestingUser.balance - task.cost})
+    
+    task.acceptingNewResponses(function(error) {
+      if(error) {
+        res.json(error);
+      } else {
+        task.user.update({balance: task.user.balance - task.cost})
         answeringUser.update({balance: answeringUser.balance + task.cost})
-        
-        db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE].bulkCreate(taskActions.map(obj => {
-            return {userId: answeringUser.id, taskactionId: obj.id, response: taskActionResponses[obj.id]}
-        })).then(() => {
-            res.json({error: "", result: true})
+        db[CONSTANTS.MODELS.TASK_RESPONSE].create({
+          userId: userId,
+          taskId: taskId,
+          taskActionResponses: taskActionResponses
+        }, {
+          include: [db[CONSTANTS.MODELS.TASK_ACTION_RESPONSES]]
         }).catch(error => {
-            console.log(error.message);
-            res.json({error: error.message});
+          console.log(error.message);
+          return res.json({error: error.message});
+        }).then(createdTaskResponse => {
+          return res.json({
+            createdTaskId: createdTaskResponse.id
+          });
         });
-    }
-    });
+      }
+    })
   });
 });
 

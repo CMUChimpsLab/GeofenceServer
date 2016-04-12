@@ -10,7 +10,7 @@ export default function (sequelize, DataType) {
   }, {
     classMethods: {
       associate: function (models) {
-        User.hasMany(models[CONSTANTS.MODELS.TASK_ACTION_RESPONSE]);
+        User.hasMany(models[CONSTANTS.MODELS.TASK_RESPONSE]);
         User.hasMany(models[CONSTANTS.MODELS.TASK]);
       }
     }

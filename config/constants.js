@@ -20,6 +20,7 @@ export const ROUTES = {
 const MODELS = {
   CHANGE_LOG: "changelog",
   TASK: "task",
+  TASK_RESPONSE: "taskresponse",
   TASK_ACTION: "taskaction",
   TASK_ACTION_RESPONSE: "taskactionresponse",
   LOCATION: "location",

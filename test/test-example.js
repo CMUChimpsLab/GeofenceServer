@@ -94,6 +94,7 @@ describe('POST /db/task-add', function() {
       userId: fakeUser.userId,
       taskName: 'fake task',
       cost: 0.5,
+      refreshRate: 10,
       expiresAt: new Date(),
       locationName: 'Downtown Pittsburgh center',
       lat: 40.4416667,
@@ -134,6 +135,7 @@ describe('POST /db/task-respond', function() {
       userId: fakeUser.userId,
       taskName: 'new fake task',
       cost: 0.5,
+      refreshRate: .001,
       expiresAt: laterDate,
       locationName: 'Downtown Pittsburgh center',
       lat: 40.4416667,
@@ -142,7 +144,7 @@ describe('POST /db/task-respond', function() {
       taskActions: [{'description': 'how many dogs are here now?', type: 'text'},
                     {'description': 'What is their color?', type: 'text'}]
   };
-  var action1Id, action2Id;
+  var action1Id, action2Id, taskId;
   it("Responds to a task", function(done) {
     // first, make sure fakeUser2 exists (fakeUser was created previously
     server.post('/db/user-create')
@@ -154,11 +156,16 @@ describe('POST /db/task-respond', function() {
           .send(task)
           .expect(200)
           .end(function(err, res) {
+            taskId = res.body['createdTaskId'];
+            console.log('CREATED TASK BODY:')
+            console.log(res.body);
             action1Id = res.body['createdTaskActions'][0]['id'];
             action2Id = res.body['createdTaskActions'][1]['id'];
+            
             // Then fakeUser2 responds to it.
             var taskResponse = {
               userId: fakeUser2.userId,
+              taskId: taskId,
               taskActionIds: [action1Id, action2Id],
               responses: {}
             }
@@ -167,7 +174,7 @@ describe('POST /db/task-respond', function() {
             server.post('/db/task-respond')
               .send(taskResponse)
               .end(function(err, res) {
-                console.log(res.body);
+                if(err) throw new Error(err)
                 should(res.body['result']).be.true();
                 // No in-depth checks here, just it should send the "ok" signal.
                 // TODO maybe we can shorten this test b/c there was already
@@ -182,6 +189,7 @@ describe('POST /db/task-respond', function() {
         // Then fakeUser2 responds to it.
         var taskResponse = {
             userId: fakeUser2.userId,
+            taskId: taskId,
             taskActionIds: [action1Id],
             responses: {}
         }
@@ -189,7 +197,6 @@ describe('POST /db/task-respond', function() {
         server.post('/db/task-respond')
             .send(taskResponse)
             .end(function(err, res) {
-            console.log(res.body);
             should(res.body['error']).be.equal("User did not answer all parts of the task");
             done();
             });
@@ -202,6 +209,7 @@ describe('POST /db/task-respond', function() {
         userId: fakeUser2.userId,
         taskName: 'new expensive fake task',
         cost: 10,
+        refreshRate: 120,
         expiresAt: laterDate,
         locationName: 'Downtown Pittsburgh center',
         lat: 40.4416667,
@@ -224,7 +232,6 @@ describe('POST /db/task-respond', function() {
         server.post('/db/task-respond')
             .send(taskResponse)
             .end(function(err, res) {
-            console.log(res.body);
             should(res.body['error']).be.equal("The user does not have the funds to pay");
             done();
             });
@@ -245,7 +252,6 @@ describe('POST /db/task-respond', function() {
         server.post('/db/task-respond')
           .send(taskResponse)
           .end(function(err, res) {
-            console.log(res.body);
             should(res.body['error']).not.be.undefined();
             done();
           });
