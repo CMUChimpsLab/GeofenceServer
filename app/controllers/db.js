@@ -143,7 +143,7 @@ router.get(CONSTANTS.ROUTES.DB.TASK_FETCH, (req, res, next) => {
     where: {
       id: requestedFetchTaskIds
     },
-    include: [db[CONSTANTS.MODELS.LOCATION], db[CONSTANTS.MODELS.TASK_RESPONSE]]
+    include: [db[CONSTANTS.MODELS.LOCATION], db[CONSTANTS.MODELS.TASK_RESPONSE], db[CONSTANTS.MODELS.TASK_ACTION]]
   }).then(fetchedTasks => {
     res.json(fetchedTasks);
   }).catch(error => {
@@ -183,8 +183,7 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, 
   const userId = req.body.userId;
   const taskId = req.body.taskId;
   const taskActionResponses = req.body.responses; // map: id -> text/number/whatever
-  
-  console.log("RECEIVED A TASK RESPONES")
+  const taskActionIdArray = req.body.taskActionIds
   Promise.all([db[CONSTANTS.MODELS.USER].findOne({
     where: {id: userId}
   }), db[CONSTANTS.MODELS.TASK].findOne({
@@ -198,28 +197,30 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, 
     // console.log("FOUND TASK")
     // console.log(task);
     if (!answeringUser) {
-      console.log("provided user does not exist");
       res.json({error: "provided user does not exist"});
     }
-    
     task.acceptingNewResponses(function(error) {
       if(error) {
+        
         res.json(error);
       } else {
+
         task.user.update({balance: task.user.balance - task.cost})
         answeringUser.update({balance: answeringUser.balance + task.cost})
         db[CONSTANTS.MODELS.TASK_RESPONSE].create({
           userId: userId,
-          taskId: taskId,
-          taskActionResponses: taskActionResponses
+          taskId: taskId
         }, {
-          include: [db[CONSTANTS.MODELS.TASK_ACTION_RESPONSES]]
+          include: [db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE]]
         }).catch(error => {
-          console.log(error.message);
           return res.json({error: error.message});
-        }).then(createdTaskResponse => {
-          return res.json({
-            createdTaskId: createdTaskResponse.id
+        }).then((createdTaskResponse, err) => {
+          db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE].bulkCreate(taskActionIdArray.map(id => {
+            return {userId: userId, response: taskActionResponses[id], taskactionId: id, taskresponseId: createdTaskResponse.id}
+          })).then((newActions, err) => {
+            res.json({error: "", result: true})
+          }).catch(error => {
+            res.json({error: error.message});
           });
         });
       }
@@ -248,7 +249,6 @@ router.post(CONSTANTS.ROUTES.DB.USER_CREATE, checkIfUserIdProvided, (req, res, n
 
 router.get(CONSTANTS.ROUTES.DB.USER_FETCH, (req, res, next) => {
   const userId = req.query['userId'];
- 
   db[CONSTANTS.MODELS.USER].findOne({
     where: {
       id: userId

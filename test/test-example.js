@@ -74,7 +74,12 @@ describe('POST /db/user-create', function() {
           throw new Error("Didn't find the user.");
         }
       })
-      .end(done);
+      .end(function (err, res) { // changed from end(done);
+        if (err) {
+          console.error(res.error);
+        }
+        done(err);
+      });
   });
   it('correctly doesn\'t find a user who doesn\'t exist', function(done) {
     server.get('/db/user-fetch')
@@ -88,7 +93,7 @@ describe('POST /db/user-create', function() {
   });
 });
 
-var createdTaskId;
+var createdTaskIdQuickExpire, createdTaskActionQuickExpire;
 describe('POST /db/task-add', function() {
   var task = {
       userId: fakeUser.userId,
@@ -109,8 +114,9 @@ describe('POST /db/task-add', function() {
       .expect(200)
       .end(function(err, res) {
         // Make sure it was actually added by fetching it too.
-        createdTaskId = res.body['createdTaskId'];
-        server.get('/db/task-fetch?taskId=' + createdTaskId)
+        createdTaskIdQuickExpire = res.body['createdTaskId'];
+        createdTaskActionQuickExpire = res.body['createdTaskActions'][0]['id'];
+        server.get('/db/task-fetch?taskId=' + createdTaskIdQuickExpire)
           .expect(200)
           .end(function(err, res) {
             res['body'][0]['name'].should.equal('fake task');
@@ -128,6 +134,7 @@ describe('POST /db/task-add', function() {
   });
 });
 
+var taskId2;
 describe('POST /db/task-respond', function() {
   var laterDate = new Date();
   laterDate.setMinutes(61); // so it will be at least some time in the future
@@ -135,7 +142,7 @@ describe('POST /db/task-respond', function() {
       userId: fakeUser.userId,
       taskName: 'new fake task',
       cost: 0.5,
-      refreshRate: .001,
+      refreshRate: 10,
       expiresAt: laterDate,
       locationName: 'Downtown Pittsburgh center',
       lat: 40.4416667,
@@ -144,7 +151,7 @@ describe('POST /db/task-respond', function() {
       taskActions: [{'description': 'how many dogs are here now?', type: 'text'},
                     {'description': 'What is their color?', type: 'text'}]
   };
-  var action1Id, action2Id, taskId;
+  var action1Id, action2Id, taskIdShort;
   it("Responds to a task", function(done) {
     // first, make sure fakeUser2 exists (fakeUser was created previously
     server.post('/db/user-create')
@@ -156,16 +163,14 @@ describe('POST /db/task-respond', function() {
           .send(task)
           .expect(200)
           .end(function(err, res) {
-            taskId = res.body['createdTaskId'];
-            console.log('CREATED TASK BODY:')
-            console.log(res.body);
+            taskId2 = res.body['createdTaskId'];
             action1Id = res.body['createdTaskActions'][0]['id'];
             action2Id = res.body['createdTaskActions'][1]['id'];
             
             // Then fakeUser2 responds to it.
             var taskResponse = {
               userId: fakeUser2.userId,
-              taskId: taskId,
+              taskId: taskId2,
               taskActionIds: [action1Id, action2Id],
               responses: {}
             }
@@ -173,9 +178,11 @@ describe('POST /db/task-respond', function() {
             taskResponse['responses'][action2Id] = "blue, purple, and green";
             server.post('/db/task-respond')
               .send(taskResponse)
+              .expect(200)
               .end(function(err, res) {
-                if(err) throw new Error(err)
-                should(res.body['result']).be.true();
+                console.error(err);
+                if(err) { console.error(res); }
+                res.body['result'].should.be.true();
                 // No in-depth checks here, just it should send the "ok" signal.
                 // TODO maybe we can shorten this test b/c there was already
                 // a task created, maybe we can just respond to that one.
@@ -185,30 +192,31 @@ describe('POST /db/task-respond', function() {
       });
   });
   
-  it("Fails a response if the user did not fully answer", function(done) {
+  it("Fails a response if another user answered too soon", function(done) {
         // Then fakeUser2 responds to it.
         var taskResponse = {
             userId: fakeUser2.userId,
-            taskId: taskId,
+            taskId: taskId2,
             taskActionIds: [action1Id],
             responses: {}
         }
         taskResponse['responses'][action1Id] = "three dogs";
         server.post('/db/task-respond')
             .send(taskResponse)
+            .expect(200)
             .end(function(err, res) {
-            should(res.body['error']).be.equal("User did not answer all parts of the task");
-            done();
+              should(res.body['error']).startWith('Another user has recently answered');
+              done();
             });
   })
   
   it("Fails a response if the user does not have enough money", function(done) {
     var laterDate = new Date();
     laterDate.setMinutes(61); // so it will be at least some time in the future
-    var task = {
+    var expensiveTask = {
         userId: fakeUser2.userId,
         taskName: 'new expensive fake task',
-        cost: 10,
+        cost: 30,
         refreshRate: 120,
         expiresAt: laterDate,
         locationName: 'Downtown Pittsburgh center',
@@ -221,30 +229,35 @@ describe('POST /db/task-respond', function() {
         .send(task)
         .expect(200)
         .end(function(err, res) {
+        expensiveTaskId = res.body['createdTaskId']
         expensiveActionId = res.body['createdTaskActions'][0]['id'];
         // Then fakeUser responds to it.
         var taskResponse = {
             userId: fakeUser.userId,
+            taskId: expensiveTaskId,
             taskActionIds: [expensiveActionId],
             responses: {}
         }
         taskResponse['responses'][expensiveActionId] = "very expensive!";
         server.post('/db/task-respond')
             .send(taskResponse)
+            .expect(function(err,res) {
+              should(res.body['error']).startWith('The user does not have the funds to pay');
+            })
             .end(function(err, res) {
-            should(res.body['error']).be.equal("The user does not have the funds to pay");
-            done();
+              done();
             });
         });
   })
   
   it("Fails a response if the task has expired", function(done) {
     // createdTaskId; // got this from a test above.
-    server.get('/db/task-fetch?taskId=' + createdTaskId)
+    server.get('/db/task-fetch?taskId=' + createdTaskIdQuickExpire)
       .end(function(err, res) {
-        var taskactionId = res.body[0].taskactions[0].id;
+        var taskactionId = res.body[0]['taskactions'][0].id;
         var taskResponse = {
           userId: fakeUser2.userId,
+          taskId: createdTaskIdQuickExpire,
           taskActionIds: [taskactionId],
           responses: {}
         }
@@ -252,7 +265,7 @@ describe('POST /db/task-respond', function() {
         server.post('/db/task-respond')
           .send(taskResponse)
           .end(function(err, res) {
-            should(res.body['error']).not.be.undefined();
+            should(res.body['error']).startWith('Task has expired');
             done();
           });
       });

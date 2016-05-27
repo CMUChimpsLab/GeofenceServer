@@ -11,6 +11,11 @@ export default function (sequelize, DataType) {
           onDelete: "CASCADE",
           foreignKey: {allowNull: false}
         });
+        
+        TaskAction.hasMany(models[CONSTANTS.MODELS.TASK_ACTION_RESPONSE], { // creates a `taskId` field
+          onDelete: "CASCADE",
+          foreignKey: {allowNull: false}
+        });
       }
     }
   });

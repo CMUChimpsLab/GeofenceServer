@@ -23,17 +23,18 @@ export default function (sequelize, DataType) {
       acceptingNewResponses : function(done) {
         //This function will check if a task has expired, the user has enough $, and the recency of the most recent entry
         var task = this;
-        var requestingUser = task.user
-        var exp_time = tsk['expiresAt'];
+        var requestingUser = task.user;
+        var exp_time = task['expiresAt'];
         var now = new Date();
         var latestResponseTime =  new Date();
         latestResponseTime.setTime(1);
-        if(task.taskResponse) {
-          latestResponseTime = task.taskResponse[0].createdAt  // if there is no prior taskResponse, create 1970 date.
+        if(task.taskresponses.length > 0) {
+          latestResponseTime = task.taskresponses[0].createdAt  // if there is no prior taskResponse, create 1970 date.
         }
         var nextAvailableTime = new Date(latestResponseTime.getTime())
         nextAvailableTime.setMinutes(latestResponseTime.getMinutes() + task['refreshRate']);
         var error = null;
+       
         if (now > exp_time) { //check if the Task has expired
           console.log("Task has expired at: " + exp_time);
           error = {error: "Task has expired at: " + exp_time};
@@ -44,7 +45,6 @@ export default function (sequelize, DataType) {
           console.log("Another user has recently answered the question. Next available time is: " + nextAvailableTime);
           error = {error: "Another user has recently answered the question. Next available time is: " + nextAvailableTime};
         } 
-
         done(error);      
         
         

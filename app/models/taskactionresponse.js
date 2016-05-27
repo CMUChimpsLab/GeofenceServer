@@ -10,7 +10,11 @@ export default function (sequelize, DataType) {
           onDelete: "CASCADE",
           foreignKey: {allowNull: false}
         });
-        TaskActionResponse.belongsTo(models[CONSTANTS.MODELS.TASK_RESPONSE], { // creates a `taskactionId` field
+        TaskActionResponse.belongsTo(models[CONSTANTS.MODELS.TASK_RESPONSE], { // creates a `taskresponseId` field
+          onDelete: "CASCADE",
+          foreignKey: {allowNull: false}
+        });
+        TaskActionResponse.belongsTo(models[CONSTANTS.MODELS.TASK_ACTION], { // creates a `taskactionId` field
           onDelete: "CASCADE",
           foreignKey: {allowNull: false}
         });
