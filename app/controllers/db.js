@@ -74,15 +74,14 @@ router.post(CONSTANTS.ROUTES.DB.TASK_ADD, checkIfUserIdProvided, (req, res, next
     return res.json({error: "Lat and Lng must both be numbers."});
   } else {
 
-    var d = new Date(0);
-    d.setUTCSeconds(req.body.expiresAt);
+
 
     db[CONSTANTS.MODELS.TASK].create({
       userId: userId,
       name: req.body.taskName,
       cost: req.body.cost,
       refreshRate: req.body.refreshRate,
-      expiresAt: d,
+      expiresAt: req.body.expiresAt,
       location: {
         name: req.body.locationName,
         lat: req.body.lat,
@@ -149,10 +148,7 @@ router.get(CONSTANTS.ROUTES.DB.TASK_FETCH, (req, res, next) => {
     },
     include: [db[CONSTANTS.MODELS.LOCATION], db[CONSTANTS.MODELS.TASK_RESPONSE], db[CONSTANTS.MODELS.TASK_ACTION]]
   }).then(fetchedTasks => {
-    fetchedTasks = fetchedTasks.map(function(task) {
-      task.expiresAt = task.expiresAt.getTime()
-      return task;
-    });
+    console.log(fetchedTasks[0].expiresAt)
     res.json(fetchedTasks);
   }).catch(error => {
     console.log(error.message);

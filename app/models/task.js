@@ -1,12 +1,12 @@
 import CONSTANTS from "../../config/constants";
 
 // TODO addd the task creator.
-export default function (sequelize, DataType) {  
+export default function (sequelize, DataType) {
   const Task = sequelize.define(CONSTANTS.MODELS.TASK, {
     name: {type: DataType.STRING, allowNull: false},
     cost: {type: DataType.DOUBLE, allowNull: false},
     refreshRate: {type: DataType.DOUBLE, allowNull: false},
-    expiresAt: {type: DataType.DATE, allowNull: true}
+    expiresAt: {type: DataType.DOUBLE, allowNull: true}
   }, {
     classMethods: {
       associate: function (models) {
@@ -34,7 +34,7 @@ export default function (sequelize, DataType) {
         var nextAvailableTime = new Date(latestResponseTime.getTime())
         nextAvailableTime.setMinutes(latestResponseTime.getMinutes() + task['refreshRate']);
         var error = null;
-       
+
         if (now > exp_time) { //check if the Task has expired
           console.log("Task has expired at: " + exp_time);
           error = {error: "Task has expired at: " + exp_time};
@@ -44,10 +44,10 @@ export default function (sequelize, DataType) {
         } else if (now < nextAvailableTime) { //check if it has been answered too recently
           console.log("Another user has recently answered the question. Next available time is: " + nextAvailableTime);
           error = {error: "Another user has recently answered the question. Next available time is: " + nextAvailableTime};
-        } 
-        done(error);      
-        
-        
+        }
+        done(error);
+
+
       }
     }
   });
