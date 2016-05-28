@@ -152,7 +152,7 @@ router.get(CONSTANTS.ROUTES.DB.TASK_FETCH, (req, res, next) => {
     fetchedTasks = fetchedTasks.map(task) {
       task.expiresAt = task.expiresAt.getTime()
       return task;
-    }
+    });
     res.json(fetchedTasks);
   }).catch(error => {
     console.log(error.message);
