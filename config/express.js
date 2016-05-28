@@ -9,7 +9,7 @@ import methodOverride from "method-override";
 import expressHandlebars from "express-handlebars";
 import Intl from "intl";
 import fs from 'fs';
-global.Intl = Intl;
+//global.Intl = Intl;
 import HandlebarsIntl from "handlebars-intl";
 
 export default function (app, config) {
@@ -76,4 +76,3 @@ export default function (app, config) {
     });
   });
 };
-
