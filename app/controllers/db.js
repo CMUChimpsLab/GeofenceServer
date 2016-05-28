@@ -186,8 +186,8 @@ router.get(CONSTANTS.ROUTES.DB.TASK_SYNC, (req, res, next) => {
 router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, next) => {
   const userId = req.body.userId;
   const taskId = req.body.taskId;
-  const taskActionResponses = req.body.responses; // map: id -> text/number/whatever
-  const taskActionIdArray = req.body.taskActionIds
+  const taskActionResponses = JSON.parse(req.body.responses); // map: id -> text/number/whatever
+  const taskActionIdArray = JSON.parse(req.body.taskActionIds);
   console.log(1);
   Promise.all([db[CONSTANTS.MODELS.USER].findOne({
     where: {id: userId}
