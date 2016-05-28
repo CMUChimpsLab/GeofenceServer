@@ -204,10 +204,11 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, 
     // console.log(task);
     if (!answeringUser) {
       res.json({error: "provided user does not exist"});
+      console.log({error: "provided user does not exist"});
     }
     task.acceptingNewResponses(function(error) {
+      console.log(2.5);
       if(error) {
-
         res.json(error);
         console.log(error);
       } else {
