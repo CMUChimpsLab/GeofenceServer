@@ -186,8 +186,8 @@ router.get(CONSTANTS.ROUTES.DB.TASK_SYNC, (req, res, next) => {
 router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, next) => {
   const userId = req.body.userId;
   const taskId = req.body.taskId;
-  const taskActionResponses = JSON.parse(req.body.responses); // map: id -> text/number/whatever
-  const taskActionIdArray = JSON.parse(req.body.taskActionIds);
+  const taskActionResponses = req.body.responses; // map: id -> text/number/whatever
+  const taskActionIdArray = req.body.taskActionIds;
   console.log(1);
   Promise.all([db[CONSTANTS.MODELS.USER].findOne({
     where: {id: userId}
@@ -213,7 +213,8 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, 
         console.log(error);
       } else {
         console.log(3);
-
+        console.log(userId)
+        console.log(taskId)
         task.user.update({balance: task.user.balance - task.cost})
         answeringUser.update({balance: answeringUser.balance + task.cost})
         db[CONSTANTS.MODELS.TASK_RESPONSE].create({
@@ -222,6 +223,8 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, 
         }, {
           include: [db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE]]
         }).catch(error => {
+          console.log(3.5);
+          console.log(error.message);
           return res.json({error: error.message});
         }).then((createdTaskResponse, err) => {
           console.log(4);
@@ -235,10 +238,6 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, 
               if (err) {
                 console.log("failed to send gcm message");
               }
-              res.json({
-                createdTaskId: createdTask.id,
-                createdTaskActions: createdTask.taskactions
-              });
             });
           }).catch(error => {
             res.json({error: error.message});

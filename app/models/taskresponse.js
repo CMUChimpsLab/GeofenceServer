@@ -3,7 +3,7 @@ import CONSTANTS from "../../config/constants";
 // TODO addd the task creator.
 export default function (sequelize, DataType) {
   const TaskResponse = sequelize.define(CONSTANTS.MODELS.TASK_RESPONSE, {
-    createdAt: {type: DataType.DOUBLE, allowNull: true}
+    createdAt: {type: DataType.DATE, allowNull: true}
   }, {
     classMethods: {
       associate: function (models) {

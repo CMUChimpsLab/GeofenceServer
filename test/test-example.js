@@ -166,7 +166,7 @@ describe('POST /db/task-respond', function() {
             taskId2 = res.body['createdTaskId'];
             action1Id = res.body['createdTaskActions'][0]['id'];
             action2Id = res.body['createdTaskActions'][1]['id'];
-            
+
             // Then fakeUser2 responds to it.
             var taskResponse = {
               userId: fakeUser2.userId,
@@ -176,6 +176,7 @@ describe('POST /db/task-respond', function() {
             }
             taskResponse['responses'][action1Id] = "three dogs";
             taskResponse['responses'][action2Id] = "blue, purple, and green";
+            taskResponse['responses'] = taskResponse['responses'];
             server.post('/db/task-respond')
               .send(taskResponse)
               .expect(200)
@@ -191,7 +192,7 @@ describe('POST /db/task-respond', function() {
           });
       });
   });
-  
+
   it("Fails a response if another user answered too soon", function(done) {
         // Then fakeUser2 responds to it.
         var taskResponse = {
@@ -201,6 +202,7 @@ describe('POST /db/task-respond', function() {
             responses: {}
         }
         taskResponse['responses'][action1Id] = "three dogs";
+        taskResponse['responses'] = taskResponse['responses'];
         server.post('/db/task-respond')
             .send(taskResponse)
             .expect(200)
@@ -209,7 +211,7 @@ describe('POST /db/task-respond', function() {
               done();
             });
   })
-  
+
   it("Fails a response if the user does not have enough money", function(done) {
     var laterDate = new Date();
     laterDate.setMinutes(61); // so it will be at least some time in the future
@@ -249,7 +251,7 @@ describe('POST /db/task-respond', function() {
             });
         });
   })
-  
+
   it("Fails a response if the task has expired", function(done) {
     // createdTaskId; // got this from a test above.
     server.get('/db/task-fetch?taskId=' + createdTaskIdQuickExpire)

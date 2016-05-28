@@ -21,7 +21,7 @@ export default function (sequelize, DataType) {
       }
     },
     instanceMethods: {
-      
+
     }
   });
 
