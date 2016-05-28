@@ -188,12 +188,14 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, 
   const taskId = req.body.taskId;
   const taskActionResponses = req.body.responses; // map: id -> text/number/whatever
   const taskActionIdArray = req.body.taskActionIds
+  console.log(1);
   Promise.all([db[CONSTANTS.MODELS.USER].findOne({
     where: {id: userId}
   }), db[CONSTANTS.MODELS.TASK].findOne({
     where: {id: taskId},
     include: [db[CONSTANTS.MODELS.USER],{model: db[CONSTANTS.MODELS.TASK_RESPONSE], order: '"createdAt" DESC' }]
   })]).then(args => {
+    console.log(2);
     const answeringUser = args[0];
     const task = args[1];
     // console.log("FOUND ANSWERING USER")
@@ -208,6 +210,7 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, 
 
         res.json(error);
       } else {
+        console.log(3);
 
         task.user.update({balance: task.user.balance - task.cost})
         answeringUser.update({balance: answeringUser.balance + task.cost})
@@ -219,11 +222,14 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, 
         }).catch(error => {
           return res.json({error: error.message});
         }).then((createdTaskResponse, err) => {
+          console.log(4);
           db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE].bulkCreate(taskActionIdArray.map(id => {
             return {userId: userId, response: taskActionResponses[id], taskactionId: id, taskresponseId: createdTaskResponse.id}
           })).then((newActions, err) => {
+            console.log(5);
             res.json({error: "", result: true, balance: answeringUser.balance})
             gcm.sendMessage({balance: task.user.balance, id: task.id}, task.user.gcmToken, (err, response) => {
+              console.log(6);
               if (err) {
                 console.log("failed to send gcm message");
               }
