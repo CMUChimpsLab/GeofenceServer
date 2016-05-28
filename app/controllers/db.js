@@ -149,10 +149,10 @@ router.get(CONSTANTS.ROUTES.DB.TASK_FETCH, (req, res, next) => {
     },
     include: [db[CONSTANTS.MODELS.LOCATION], db[CONSTANTS.MODELS.TASK_RESPONSE], db[CONSTANTS.MODELS.TASK_ACTION]]
   }).then(fetchedTasks => {
-    fetchedTasks = fetchedTasks.map(task) {
+    fetchedTasks = fetchedTasks.map(function(task) {
       task.expiresAt = task.expiresAt.getTime()
       return task;
-    }
+    });
     res.json(fetchedTasks);
   }).catch(error => {
     console.log(error.message);
