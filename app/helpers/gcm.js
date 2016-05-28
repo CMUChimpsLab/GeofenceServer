@@ -14,10 +14,10 @@ export default class GCM {
     };
   }
 
-  sendMessage(obj, cb) {
+  sendMessage(obj, to, cb) {
     // TODO: use object extend
     this.options.body = {
-      to: "/topics/global",
+      to: to == "all" ? "/topics/global" : to,
       data: obj
     };
 

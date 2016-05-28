@@ -97,7 +97,7 @@ router.post(CONSTANTS.ROUTES.DB.TASK_ADD, checkIfUserIdProvided, (req, res, next
       return res.json({error: error.message});
     }).then(createdTask => {
       createChangeLogPromise(createdTask.id, CONSTANTS.HELPERS.CHANGE_LOG_STATUS_CREATED).then(() => {
-        gcm.sendMessage({name: createdTask.name}, (err, response) => {
+        gcm.sendMessage({name: createdTask.name}, 'all', (err, response) => {
           if (err) {
             console.log("failed to send gcm message");
           }
@@ -222,7 +222,16 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, 
           db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE].bulkCreate(taskActionIdArray.map(id => {
             return {userId: userId, response: taskActionResponses[id], taskactionId: id, taskresponseId: createdTaskResponse.id}
           })).then((newActions, err) => {
-            res.json({error: "", result: true})
+            res.json({error: "", result: true, balance: answeringUser.balance})
+            gcm.sendMessage({balance: task.user.balance, id: task.id}, task.user.gcmToken, (err, response) => {
+              if (err) {
+                console.log("failed to send gcm message");
+              }
+              res.json({
+                createdTaskId: createdTask.id,
+                createdTaskActions: createdTask.taskactions
+              });
+            });
           }).catch(error => {
             res.json({error: error.message});
           });
