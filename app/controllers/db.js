@@ -102,6 +102,7 @@ router.post(CONSTANTS.ROUTES.DB.TASK_ADD, checkIfUserIdProvided, (req, res, next
             console.log("failed to send gcm message");
           }
           res.json({
+            error: "",
             createdTaskId: createdTask.id,
             createdTaskActions: createdTask.taskactions
           });
@@ -148,7 +149,8 @@ router.get(CONSTANTS.ROUTES.DB.TASK_FETCH, (req, res, next) => {
     },
     include: [db[CONSTANTS.MODELS.LOCATION], db[CONSTANTS.MODELS.TASK_RESPONSE], db[CONSTANTS.MODELS.TASK_ACTION]]
   }).then(fetchedTasks => {
-    console.log(fetchedTasks[0].expiresAt)
+    console.log(fetchedTasks[0].expiresAt);
+    fetchedTasks.error = "";
     res.json(fetchedTasks);
   }).catch(error => {
     console.log(error.message);
@@ -169,10 +171,12 @@ router.get(CONSTANTS.ROUTES.DB.TASK_SYNC, (req, res, next) => {
           return {taskId: changeObj.taskId, status: changeObj.status};
         })
       };
+      changeLog.error = "";
       res.json(changeLog);
     }
     else {
       res.json({
+        error: "",
         lastUpdated: 0,
         changes: []
       });
@@ -209,7 +213,7 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, 
     task.acceptingNewResponses(function(error) {
       console.log(2.5);
       if(error) {
-        res.json(error);
+        res.json({error: error});
         console.log(error);
       } else {
         console.log(3);
@@ -274,6 +278,7 @@ router.get(CONSTANTS.ROUTES.DB.USER_FETCH, (req, res, next) => {
       id: userId
     }
   }).then(fetchedUser => {
+    fetchedUser.error = "";
     res.json(fetchedUser);
   }).catch(error => {
     console.log(error.message);
