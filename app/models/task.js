@@ -6,7 +6,7 @@ export default function (sequelize, DataType) {
     name: {type: DataType.STRING, allowNull: false},
     cost: {type: DataType.DOUBLE, allowNull: false},
     refreshRate: {type: DataType.DOUBLE, allowNull: false},
-    expiresAt: {type: DataType.DATE, allowNull: true}
+    expiresAt: {type: DataType.DOUBLE, allowNull: true}
   }, {
     classMethods: {
       associate: function (models) {
@@ -24,7 +24,7 @@ export default function (sequelize, DataType) {
         //This function will check if a task has expired, the user has enough $, and the recency of the most recent entry
         var task = this;
         var requestingUser = task.user;
-        var exp_time = task['expiresAt'];
+        var exp_time = new Date(task['expiresAt']);
         var now = new Date();
         var latestResponseTime =  new Date();
         latestResponseTime.setTime(1);
