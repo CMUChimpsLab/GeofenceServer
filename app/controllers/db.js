@@ -132,7 +132,6 @@ router.get(CONSTANTS.ROUTES.DB.TASK_DELETE + "/:task_id", (req, res, next) => {
   });
 });
 
-
 router.get(CONSTANTS.ROUTES.DB.TASK_FETCH, (req, res, next) => {
   let requestedFetchTaskIds;
   try {
@@ -186,9 +185,10 @@ router.get(CONSTANTS.ROUTES.DB.TASK_SYNC, (req, res, next) => {
 router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, next) => {
   const userId = req.body.userId;
   const taskId = req.body.taskId;
-  const taskActionResponses = req.body.responses; // map: id -> text/number/whatever
-  const taskActionIdArray = req.body.taskActionIds;
+  const taskActionResponses = JSON.parse(req.body.responses); // map: id -> text/number/whatever
+  const taskActionIdArray = JSON.parse(req.body.taskActionIds);
   console.log(1);
+  console.log("ID Array: " + taskActionIdArray);
   Promise.all([db[CONSTANTS.MODELS.USER].findOne({
     where: {id: userId}
   }), db[CONSTANTS.MODELS.TASK].findOne({
@@ -198,10 +198,8 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, 
     console.log(2);
     const answeringUser = args[0];
     const task = args[1];
-    // console.log("FOUND ANSWERING USER")
-    // console.log(answeringUser.id)
-    // console.log("FOUND TASK")
-    // console.log(task);
+    console.log("Answering User: " + answeringUser.id)
+    console.log("Task ID: " + task.id);
     if (!answeringUser) {
       res.json({error: "provided user does not exist"});
       console.log({error: "provided user does not exist"});
@@ -213,8 +211,8 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, 
         console.log(error);
       } else {
         console.log(3);
-        console.log(userId)
-        console.log(taskId)
+        console.log("User ID: " + userId);
+        console.log("Task ID: " + taskId);
         task.user.update({balance: task.user.balance - task.cost})
         answeringUser.update({balance: answeringUser.balance + task.cost})
         db[CONSTANTS.MODELS.TASK_RESPONSE].create({
@@ -229,6 +227,7 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, 
         }).then((createdTaskResponse, err) => {
           console.log(4);
           db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE].bulkCreate(taskActionIdArray.map(id => {
+            console.log("Action ID: #" + id + " Response: " + taskActionResponses[id]);
             return {userId: userId, response: taskActionResponses[id], taskactionId: id, taskresponseId: createdTaskResponse.id}
           })).then((newActions, err) => {
             console.log(5);
