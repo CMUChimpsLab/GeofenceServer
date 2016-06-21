@@ -62,6 +62,19 @@ function checkIfUserIdProvided(req, res, next) {
   }
 }
 
+/**
+ * Middleware for checking if taskId was passed over.
+ * Used for fetching task responses
+ */
+function checkIfTaskIdProvided(req, res, next) {
+  if (!req.query.taskId) {
+    res.json({error: "taskId not provided"});
+    res.end();
+  } else {
+    next();
+  }
+}
+
 router.post(CONSTANTS.ROUTES.DB.TASK_ADD, checkIfUserIdProvided, (req, res, next) => {
   const userId = req.body.userId;
   if (!req.body['taskActions']) {
@@ -198,7 +211,7 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, 
     console.log(2);
     const answeringUser = args[0];
     const task = args[1];
-    console.log("Answering User: " + answeringUser.id)
+    console.log("Answering User: " + answeringUser.id);
     console.log("Task ID: " + task.id);
     if (!answeringUser) {
       res.json({error: "provided user does not exist"});
@@ -244,6 +257,19 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, 
         });
       }
     })
+  });
+});
+
+router.get(CONSTANTS.ROUTES.DB.RESPONSE_FETCH, checkIfTaskIdProvided, (req, res, next) => {
+  const taskId = req.query.taskId;
+
+  db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE].findAll({
+    where: {taskresponseId: taskId}
+  }).catch(error => {
+    console.log(error.message);
+    res.json({error: error.message});
+  }).then(fetchedResponses => {
+    res.json({error: "", responses: fetchedResponses});
   });
 });
 

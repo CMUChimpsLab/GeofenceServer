@@ -12,6 +12,7 @@ export const ROUTES = {
     TASK_FETCH: "/db/task-fetch",
     TASK_SYNC: "/db/task-sync",
     TASK_RESPOND: "/db/task-respond",
+    RESPONSE_FETCH: "/db/response-fetch",
     USER_CREATE: "/db/user-create",
     USER_FETCH: "/db/user-fetch"
   }
