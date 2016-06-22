@@ -266,7 +266,6 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, 
 
 router.get(CONSTANTS.ROUTES.DB.RESPONSE_FETCH, checkIfTaskIdProvided, (req, res, next) => {
   const taskId = req.query.taskId;
-  // var actionIds = [];
 
   // find all task actions of this task
   db[CONSTANTS.MODELS.TASK_RESPONSE].findAll({
