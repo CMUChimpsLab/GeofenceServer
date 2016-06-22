@@ -266,32 +266,18 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, 
 
 router.get(CONSTANTS.ROUTES.DB.RESPONSE_FETCH, checkIfTaskIdProvided, (req, res, next) => {
   const taskId = req.query.taskId;
-  var actionIds = [];
+  // var actionIds = [];
 
   // find all task actions of this task
-  db[CONSTANTS.MODELS.TASK_ACTION].findAll({
-    where: {taskId: taskId}
+  db[CONSTANTS.MODELS.TASK_RESPONSE].findAll({
+    where: {taskId: taskId},
+    include: [db[CONSTANTS.MODELS.USER], db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE]]
   }).catch(error => {
     console.log(error.message);
     res.json({error: error.message});
-  }).then(fetchedActions => {
-    var action;
-    var allResponses, actionIds = [];
-    // then find all the action IDs
-    for (let i = 0; i < fetchedActions.length; i++)
-      actionIds.push(fetchedActions[i].id);
-    console.log("Action IDs of this task: " + actionIds);
-
-    // finally find all action responses
-    db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE].findAll({
-      where: {taskactionId: {$in: actionIds}}
-    }).catch(error => {
-      console.log(error.message);
-      res.json({error: error.message});
-    }).then(fetchedResponses => {
-      res.json({error: "", responses: fetchedResponses});  
-    });
-
+  }).then(fetchedResponses => {
+    console.log(fetchedResponses);
+    res.json({error: "", responses: fetchedResponses});
   });
 
 });
