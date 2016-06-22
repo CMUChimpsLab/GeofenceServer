@@ -6,7 +6,8 @@ export default function (sequelize, DataType) {
     name: {type: DataType.STRING, allowNull: false},
     cost: {type: DataType.DOUBLE, allowNull: false},
     refreshRate: {type: DataType.DOUBLE, allowNull: false},
-    expiresAt: {type: DataType.DOUBLE, allowNull: true}
+    expiresAt: {type: DataType.DOUBLE, allowNull: true},
+    answersLeft: {type: DataType.INTEGER, allowNull: false}
   }, {
     classMethods: {
       associate: function (models) {
