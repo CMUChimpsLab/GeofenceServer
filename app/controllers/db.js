@@ -86,15 +86,15 @@ router.post(CONSTANTS.ROUTES.DB.TASK_ADD, checkIfUserIdProvided, (req, res, next
   } else if (!parseFloat(req.body['lat']) || !parseFloat(req.body['lng'])) {
     return res.json({error: "Lat and Lng must both be numbers."});
   } else {
-
-
-
+    
+    // create text
     db[CONSTANTS.MODELS.TASK].create({
       userId: userId,
       name: req.body.taskName,
       cost: req.body.cost,
       refreshRate: req.body.refreshRate,
       expiresAt: req.body.expiresAt,
+      answersLeft: req.body.answersLeft,
       location: {
         name: req.body.locationName,
         lat: req.body.lat,
@@ -214,8 +214,11 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, 
     console.log("Answering User: " + answeringUser.id);
     console.log("Task ID: " + task.id);
     if (!answeringUser) {
-      res.json({error: "provided user does not exist"});
       console.log({error: "provided user does not exist"});
+      return res.json({error: "Provided user does not exist"});
+    } else if (task.answersLeft == 0) {
+      console.log({error: "task is already completed"});
+      return res.json({error: "Task is already completed"});   // no answers left
     }
     task.acceptingNewResponses(function(error) {
       console.log(2.5);
@@ -226,8 +229,9 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, 
         console.log(3);
         console.log("User ID: " + userId);
         console.log("Task ID: " + taskId);
-        task.user.update({balance: task.user.balance - task.cost})
-        answeringUser.update({balance: answeringUser.balance + task.cost})
+        task.user.update({balance: task.user.balance - task.cost});
+        answeringUser.update({balance: answeringUser.balance + task.cost});
+        task.update({answersLeft: task.answersLeft - 1});
         db[CONSTANTS.MODELS.TASK_RESPONSE].create({
           userId: userId,
           taskId: taskId
@@ -262,15 +266,34 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkIfUserIdProvided, (req, res, 
 
 router.get(CONSTANTS.ROUTES.DB.RESPONSE_FETCH, checkIfTaskIdProvided, (req, res, next) => {
   const taskId = req.query.taskId;
+  var actionIds = [];
 
-  db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE].findAll({
-    where: {taskresponseId: taskId}
+  // find all task actions of this task
+  db[CONSTANTS.MODELS.TASK_ACTION].findAll({
+    where: {taskId: taskId}
   }).catch(error => {
     console.log(error.message);
     res.json({error: error.message});
-  }).then(fetchedResponses => {
-    res.json({error: "", responses: fetchedResponses});
+  }).then(fetchedActions => {
+    var action;
+    var allResponses, actionIds = [];
+    // then find all the action IDs
+    for (let i = 0; i < fetchedActions.length; i++)
+      actionIds.push(fetchedActions[i].id);
+    console.log("Action IDs of this task: " + actionIds);
+
+    // finally find all action responses
+    db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE].findAll({
+      where: {taskactionId: {$in: actionIds}}
+    }).catch(error => {
+      console.log(error.message);
+      res.json({error: error.message});
+    }).then(fetchedResponses => {
+      res.json({error: "", responses: fetchedResponses});  
+    });
+
   });
+
 });
 
 router.post(CONSTANTS.ROUTES.DB.USER_CREATE, checkIfUserIdProvided, (req, res, next) => {
