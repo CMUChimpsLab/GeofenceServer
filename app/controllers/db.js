@@ -34,6 +34,27 @@ function checkRequiredParams(requiredParams) {
 
 
 /**
+ * Middleware to ensure that a user exists for the given userId.
+ */
+function ensureUserExists(req, res, next) {
+  db[CONSTANTS.MODELS.USER].findOne({
+    where: {
+      id: req.query.userId || req.body.userId
+    }
+  }).then(user => {
+    debug("User search result: ", user.dataValues);
+    if (!user) return next(new Error("Requested user does not exist."));
+
+    // set user onto req obj for next middlewares
+    req.user = user;
+    return next();
+  }).catch(error => {
+    return next(error);
+  });
+}
+
+
+/**
  * Returns a promise that records status changes of tasks to the ChangeLog DB.
  * The ChangeLog DB is used whenever users sync with the server.
  *
@@ -70,8 +91,8 @@ function createChangeLogPromise(taskId, status) {
  *    }]
  * }
  */
-const taskAddRequiredParams = ["userId", "taskId", "taskName", "cost", "expiresAt", "refreshRate", "answersLeft", "locationName", "lat", "lng", "radius", "taskActions"];
-router.post(CONSTANTS.ROUTES.DB.TASK_ADD, checkRequiredParams(taskAddRequiredParams), (req, res, next) => {
+const taskAddRequiredParams = ["taskName", "cost", "expiresAt", "refreshRate", "answersLeft", "locationName", "lat", "lng", "radius", "taskActions"];
+router.post(CONSTANTS.ROUTES.DB.TASK_ADD, ensureUserExists, checkRequiredParams(taskAddRequiredParams), (req, res, next) => {
   debug("Requested to create task with following params: ", req.body);
 
   if (!parseFloat(req.body["cost"])) {
@@ -230,39 +251,27 @@ router.get(CONSTANTS.ROUTES.DB.TASK_SYNC, (req, res, next) => {
  *    "balance": userBalance
  * }
  */
-router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkRequiredParams(["userId", "taskId", "responses", "taskActionIds"]), (req, res, next) => {
-  const userId = req.body.userId;
+router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, ensureUserExists, checkRequiredParams(["taskId", "responses", "taskActionIds"]), (req, res, next) => {
+  const user = req.user;
   const taskId = req.body.taskId;
   const taskActionResponses = JSON.parse(req.body.responses); // JSONObj {taskActionId: response} as a string
   const taskActionIdArray = JSON.parse(req.body.taskActionIds);
 
-  Promise.all([db[CONSTANTS.MODELS.USER].findOne({
-    where: {id: userId}
-  }), db[CONSTANTS.MODELS.TASK].findOne({
+  db[CONSTANTS.MODELS.TASK].findOne({
     where: {id: taskId},
     include: [db[CONSTANTS.MODELS.USER], {model: db[CONSTANTS.MODELS.TASK_RESPONSE], order: '"createdAt" DESC'}]
-  })]).then(args => {
-    const answeringUser = args[0];
-    const task = args[1];
-
-    if (!answeringUser) {
-      return next(new Error("Provided user does not exist."));
-    }
-    if (task.answersLeft === 0) {
-      return next(new Error("Task is already completed."));  // no answers left
-    }
+  }).then(task => {
+    if (task.answersLeft === 0) return next(new Error("Task is already completed."));  // no answers left
 
     task.acceptingNewResponses((error) => {
-      if (error) {
-        return next(error);
-      }
+      if (error) return next(error);
 
       task.user.update({balance: task.user.balance - task.cost});
-      answeringUser.update({balance: answeringUser.balance + task.cost});
+      user.update({balance: user.balance + task.cost});
       task.update({answersLeft: task.answersLeft - 1});
 
       db[CONSTANTS.MODELS.TASK_RESPONSE].create({
-        userId: userId,
+        userId: user.id,
         taskId: taskId
       }, {
         include: [db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE]]
@@ -272,7 +281,7 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkRequiredParams(["userId", "ta
         db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE].bulkCreate(taskActionIdArray.map(id => {
           console.log("Action ID: #" + id + " Response: " + taskActionResponses[id]);
           return {
-            userId: userId,
+            userId: user.id,
             response: taskActionResponses[id],
             taskactionId: id,
             taskresponseId: createdTaskResponse.id
@@ -280,7 +289,7 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, checkRequiredParams(["userId", "ta
         })).then((newActions, err) => {
           createChangeLogPromise(taskId, CONSTANTS.HELPERS.CHANGE_LOG_STATUS_UPDATED).then(() => {
             gcm.sendMessage({balance: task.user.balance, id: task.id}, task.user.gcmToken, (err, response) => {
-              res.json({error: "", result: true, balance: answeringUser.balance});
+              res.json({error: "", result: true, balance: user.balance});
             });
           });
         }).catch(error => {
@@ -369,16 +378,8 @@ router.post(CONSTANTS.ROUTES.DB.USER_CREATE, checkRequiredParams(["userId"]), (r
  *    "updatedAt": timeString (e.g. "2016-06-23T19:37:47.135Z")
  * }
  */
-router.get(CONSTANTS.ROUTES.DB.USER_FETCH, (req, res, next) => {
-  db[CONSTANTS.MODELS.USER].findOne({
-    where: {
-      id: req.query.userId
-    }
-  }).then(fetchedUser => {
-    res.json(fetchedUser);
-  }).catch(error => {
-    return next(error);
-  });
+router.get(CONSTANTS.ROUTES.DB.USER_FETCH, ensureUserExists, (req, res, next) => {
+  res.json(req.user);
 });
 
 // error handling middleware only for current route
