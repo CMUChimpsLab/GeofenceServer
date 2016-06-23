@@ -1,3 +1,4 @@
+const debug = require("debug")("app:helpers:gcm");
 import gcmConfig from "../../config/gcm-config.json";
 import request from "request";
 
@@ -22,8 +23,14 @@ export default class GCM {
     };
 
     request(this.options, (error, response, body) => {
-      console.log("gcm request finished with response.statusCode: " + response.statusCode);
-      console.log("gcm request response:", body);
+      if (error) {
+        debug(error);
+      }
+      else {
+        debug("gcm request finished with response.statusCode: " + response.statusCode);
+        debug("gcm request response:", body);
+      }
+
       cb(error, body);
     });
   }
