@@ -21,7 +21,7 @@ export default function (sequelize, DataType) {
       }
     },
     instanceMethods: {
-      acceptingNewResponses : function(done) {
+      acceptingNewResponses : function(cb) {
         //This function will check if a task has expired, the user has enough $, and the recency of the most recent entry
         var task = this;
         var requestingUser = task.user;
@@ -34,21 +34,18 @@ export default function (sequelize, DataType) {
         }
         var nextAvailableTime = new Date(latestResponseTime.getTime())
         nextAvailableTime.setMinutes(latestResponseTime.getMinutes() + task['refreshRate']);
-        var error = null;
 
         if (now > exp_time) { //check if the Task has expired
-          console.log("Task has expired at: " + exp_time);
-          error = {error: "Task has expired at: " + exp_time};
-        } else if (requestingUser.balance - task.cost < 0) { //check if the user has money to pay
-          console.log("The user does not have the funds to pay");
-          error = {error: "The user does not have the funds to pay"};
-        } else if (now < nextAvailableTime) { //check if it has been answered too recently
-          console.log("Another user has recently answered the question. Next available time is: " + nextAvailableTime);
-          error = {error: "Another user has recently answered the question. Next available time is: " + nextAvailableTime};
+          return cb(new Error(`Task has expired at ${exp_time}`));
         }
-        done(error);
+        if (requestingUser.balance - task.cost < 0) { // check if the user has money to pay
+          return cb(new Error("The user does not have the funds to pay"));
+        }
+        if (now < nextAvailableTime) { // check if it has been answered too recently
+          return cb(new Error(`Another user has recently answered the question. Next available time is ${nextAvailableTime}`));
+        }
 
-
+        cb(null);
       }
     }
   });
