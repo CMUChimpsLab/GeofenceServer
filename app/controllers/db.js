@@ -264,7 +264,13 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, ensureUserExists, checkRequiredPar
     if (task.answersLeft === 0) return next(new Error("Task is already completed."));  // no answers left
 
     task.acceptingNewResponses((error) => {
-      if (error) return next(error);
+      if (error) {
+        // TODO: should I do this?
+        res.status(304);
+        res.json({error: error.message});
+        console.log(error.message);
+        return;
+      }
 
       task.user.update({balance: task.user.balance - task.cost});
       user.update({balance: user.balance + task.cost});
@@ -276,7 +282,10 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, ensureUserExists, checkRequiredPar
       }, {
         include: [db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE]]
       }).catch(error => {
-        return next(error);
+        res.json({error: error.message});
+        console.log(error.message);
+        return;
+        // return next(error);
       }).then((createdTaskResponse, err) => {
         db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE].bulkCreate(taskActionIdArray.map(id => {
           console.log("Action ID: #" + id + " Response: " + taskActionResponses[id]);
@@ -293,7 +302,10 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, ensureUserExists, checkRequiredPar
             });
           });
         }).catch(error => {
-          return next(error);
+          res.json({error: error.message});
+          console.log(error.message);
+          return;
+          // return next(error);
         });
       });
     });
@@ -323,7 +335,7 @@ router.get(CONSTANTS.ROUTES.DB.RESPONSE_FETCH, checkRequiredParams(["taskId"]), 
   }).catch(error => {
     return next(error);
   }).then(fetchedResponses => {
-    console.log(fetchedResponses);
+    console.log("Fetched " + fetchedResponses.length + " responses");
     res.json({error: "", responses: fetchedResponses});
   });
 
