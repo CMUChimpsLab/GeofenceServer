@@ -265,7 +265,6 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, ensureUserExists, checkRequiredPar
 
     task.acceptingNewResponses((error) => {
       if (error) {
-        // TODO: should I do this?
         res.status(304);
         res.json({error: error.message});
         console.log(error.message);
@@ -285,7 +284,6 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, ensureUserExists, checkRequiredPar
         res.json({error: error.message});
         console.log(error.message);
         return;
-        // return next(error);
       }).then((createdTaskResponse, err) => {
         db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE].bulkCreate(taskActionIdArray.map(id => {
           console.log("Action ID: #" + id + " Response: " + taskActionResponses[id]);
@@ -305,7 +303,6 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, ensureUserExists, checkRequiredPar
           res.json({error: error.message});
           console.log(error.message);
           return;
-          // return next(error);
         });
       });
     });
