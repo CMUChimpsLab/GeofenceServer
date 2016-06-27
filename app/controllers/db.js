@@ -296,7 +296,11 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, ensureUserExists, checkRequiredPar
         })).then((newActions, err) => {
           createChangeLogPromise(taskId, CONSTANTS.HELPERS.CHANGE_LOG_STATUS_UPDATED).then(() => {
             gcm.sendMessage({balance: task.user.balance, id: task.id}, task.user.gcmToken, (err, response) => {
-              res.json({error: "", result: true, balance: user.balance});
+              res.json({
+                error: "",
+                result: true,
+                balance: user.balance
+              });
             });
           });
         }).catch(error => {
