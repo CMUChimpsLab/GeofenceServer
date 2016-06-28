@@ -1,15 +1,11 @@
 import express from "express";
 import glob from "glob";
-import favicon from "serve-favicon";
 import logger from "morgan";
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import compress from "compression";
 import methodOverride from "method-override";
 import expressHandlebars from "express-handlebars";
-import Intl from "intl";
-import fs from 'fs';
-//global.Intl = Intl;
 import HandlebarsIntl from "handlebars-intl";
 
 export default function (app, config) {
