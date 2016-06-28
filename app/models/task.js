@@ -30,9 +30,9 @@ export default function (sequelize, DataType) {
         var latestResponseTime =  new Date();
         latestResponseTime.setTime(1);
         if(task.taskresponses.length > 0) {
-          latestResponseTime = task.taskresponses[0].createdAt  // if there is no prior taskResponse, create 1970 date.
+          latestResponseTime = task.taskresponses[0].createdAt;  // if there is no prior taskResponse, create 1970 date.
         }
-        var nextAvailableTime = new Date(latestResponseTime.getTime())
+        var nextAvailableTime = new Date(latestResponseTime.getTime());
         nextAvailableTime.setMinutes(latestResponseTime.getMinutes() + task['refreshRate']);
 
         if (now > exp_time) { //check if the Task has expired

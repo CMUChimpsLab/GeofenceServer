@@ -37,19 +37,12 @@ function checkRequiredParams(requiredParams) {
  * Middleware to ensure that a user exists for the given userId.
  */
 function ensureUserExists(req, res, next) {
-  db[CONSTANTS.MODELS.USER].findOne({
-    where: {
-      id: req.query.userId || req.body.userId
-    }
-  }).then(user => {
-    debug("User search result: ", user.dataValues);
-    if (!user) return next(new Error("Requested user does not exist."));
+  db[CONSTANTS.MODELS.USER].findUser(req.query.userId || req.body.userId, (error, user) => {
+    if (error) return next(error);
 
-    // set user onto req obj for next middlewares
-    req.user = user;
-    return next();
-  }).catch(error => {
-    return next(error);
+    debug("Ensured user exists with info: ", user.dataValues);
+    req.user = user; // set user onto req obj for next middlewares
+    next();
   });
 }
 
@@ -146,15 +139,15 @@ router.post(CONSTANTS.ROUTES.DB.TASK_ADD, ensureUserExists, checkRequiredParams(
  *    //
  * }
  */
-router.get(CONSTANTS.ROUTES.DB.TASK_DELETE + "/:task_id", (req, res, next) => {
-  const taskId = req.params.task_id;
+router.get(CONSTANTS.ROUTES.DB.TASK_DELETE + "/:taskId", (req, res, next) => {
+  const taskId = req.params.taskId;
+  debug(`Deleting all data for taskId=${taskId}`);
 
-  // TODO: also destroy corresponding locations, taskactions, and taskactionresponses
   db[CONSTANTS.MODELS.TASK].destroy({
     where: {
       id: taskId
     },
-    include: [db[CONSTANTS.MODELS.LOCATION], db[CONSTANTS.MODELS.TASK_RESPONSE]]
+    include: [db[CONSTANTS.MODELS.LOCATION], db[CONSTANTS.MODELS.TASK_RESPONSE]] // TODO: also destroy corresponding locations, taskactions, and taskactionresponses
   }).then(createChangeLogPromise(taskId, CONSTANTS.HELPERS.CHANGE_LOG_STATUS_DELETED)).then(() => {
     res.redirect(CONSTANTS.ROUTES.INDEX);
   }).catch(error => {
@@ -182,6 +175,7 @@ router.get(CONSTANTS.ROUTES.DB.TASK_FETCH, (req, res, next) => {
     debug(error);
     requestedFetchTaskIds = [];
   }
+  debug("Fetching task info for taskIds:", requestedFetchTaskIds);
 
   db[CONSTANTS.MODELS.TASK].findAll({
     where: {
@@ -223,11 +217,13 @@ router.get(CONSTANTS.ROUTES.DB.TASK_SYNC, (req, res, next) => {
     }
   }).then(allChanges => {
     if (allChanges.length > 0) {
-      changeLog.lastUpdated = allChanges[allChanges.length - 1].createdAt.getTime();
+      changeLog.lastUpdated = allChanges[allChanges.length - 1].createdAt.getTime(); // time of last change
       changeLog.changes = allChanges.map(changeObj => {
         return {taskId: changeObj.taskId, status: changeObj.status};
       });
     }
+
+    debug("Sending changeLog:", changeLog);
     res.json(changeLog);
   }).catch(error => {
     return next(error);
@@ -256,6 +252,7 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, ensureUserExists, checkRequiredPar
   const taskId = req.body.taskId;
   const taskActionResponses = JSON.parse(req.body.responses); // JSONObj {taskActionId: response} as a string
   const taskActionIdArray = JSON.parse(req.body.taskActionIds);
+  debug(`Responding to taskId=${taskId} by userId=${user.id}`);
 
   db[CONSTANTS.MODELS.TASK].findOne({
     where: {id: taskId},
@@ -264,12 +261,7 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, ensureUserExists, checkRequiredPar
     if (task.answersLeft === 0) return next(new Error("Task is already completed."));  // no answers left
 
     task.acceptingNewResponses((error) => {
-      if (error) {
-        res.status(304);
-        res.json({error: error.message});
-        console.log(error.message);
-        return;
-      }
+      if (error) return next(error);
 
       task.user.update({balance: task.user.balance - task.cost});
       user.update({balance: user.balance + task.cost});
@@ -281,12 +273,10 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, ensureUserExists, checkRequiredPar
       }, {
         include: [db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE]]
       }).catch(error => {
-        res.json({error: error.message});
-        console.log(error.message);
-        return;
+        return next(error);
       }).then((createdTaskResponse, err) => {
         db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE].bulkCreate(taskActionIdArray.map(id => {
-          console.log("Action ID: #" + id + " Response: " + taskActionResponses[id]);
+          debug("Action ID: #" + id + " Response: " + taskActionResponses[id]);
           return {
             userId: user.id,
             response: taskActionResponses[id],
@@ -300,9 +290,7 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, ensureUserExists, checkRequiredPar
             });
           });
         }).catch(error => {
-          res.json({error: error.message});
-          console.log(error.message);
-          return;
+          return next(error);
         });
       });
     });
@@ -324,18 +312,17 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, ensureUserExists, checkRequiredPar
  */
 router.get(CONSTANTS.ROUTES.DB.RESPONSE_FETCH, checkRequiredParams(["taskId"]), (req, res, next) => {
   const taskId = req.query.taskId;
+  debug(`Fetching all task actions with taskId=${taskId}`);
 
-  // find all task actions of this task
   db[CONSTANTS.MODELS.TASK_RESPONSE].findAll({
     where: {taskId: taskId},
     include: [db[CONSTANTS.MODELS.USER], db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE]]
   }).catch(error => {
     return next(error);
   }).then(fetchedResponses => {
-    console.log("Fetched " + fetchedResponses.length + " responses");
+    debug(`Fetched ${fetchedResponses.length} responses.`);
     res.json({error: "", responses: fetchedResponses});
   });
-
 });
 
 
@@ -354,20 +341,12 @@ router.get(CONSTANTS.ROUTES.DB.RESPONSE_FETCH, checkRequiredParams(["taskId"]), 
  * }
  */
 router.post(CONSTANTS.ROUTES.DB.USER_CREATE, checkRequiredParams(["userId"]), (req, res, next) => {
-  db[CONSTANTS.MODELS.USER].findOrCreate({
-    where: {id: req.body.userId}
-  }).catch(error => {
-    return next(error);
-  }).then(userCreateResult => {
-    // update balance
-    userCreateResult[0].update({balance: req.body.balance ? req.body.balance : CONSTANTS.DEFAULT_BALANCE});
-    // update gcmToken if provided
-    const gcmToken = req.body.gcmToken;
-    if (gcmToken) {
-      userCreateResult[0].update({gcmToken: gcmToken});
-    }
+  const {userId, balance, gcmToken} = req.body;
+  debug(`Creating or updating user with userId=${userId}, balance=${balance}, gcmToken=${gcmToken}`);
 
-    res.json({error: "", result: userCreateResult[1]});
+  db[CONSTANTS.MODELS.USER].createOrUpdateUser(userId, balance, gcmToken, (error, result) => {
+    if (error) return next(error);
+    res.json({error: "", result: result});
   });
 });
 
@@ -388,6 +367,8 @@ router.post(CONSTANTS.ROUTES.DB.USER_CREATE, checkRequiredParams(["userId"]), (r
  * }
  */
 router.get(CONSTANTS.ROUTES.DB.USER_FETCH, ensureUserExists, (req, res, next) => {
+  debug(`Fetching info of user with id=${req.user.id}`);
+
   res.json(req.user);
 });
 
