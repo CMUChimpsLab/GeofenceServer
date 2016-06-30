@@ -1,49 +1,10 @@
 const debug = require("debug")("app:controllers:db");
-const express = require("express");
 const db = require("../models");
 const CONSTANTS = require("../../config/constants");
+const router = require("express").Router();
+const middlewares = require("../middlewares");
 const GCM = require("../helpers/gcm");
-const router = express.Router();
 const gcm = new GCM();
-
-
-/**
- * Returns middleware for checking if all required params have been provided for a request.
- *
- * @param requiredParams array of required params as strings
- * @returns {Function} middleware
- */
-function checkRequiredParams(requiredParams) {
-  debug("Checking within request for required params: ", requiredParams);
-
-  return function (req, res, next) {
-    // get params for either GET or POST request
-    const params = Object.keys(req.query).length === 0 ? req.body : req.query;
-
-    // check for each required param
-    for (let i = 0; i < requiredParams.length; i++) {
-      if (!params[requiredParams[i]]) {
-        return next(new Error(`Missing required parameter: ${requiredParams[i]}`));
-      }
-    }
-
-    next();
-  };
-}
-
-
-/**
- * Middleware to ensure that a user exists for the given userId.
- */
-function ensureUserExists(req, res, next) {
-  db[CONSTANTS.MODELS.USER].findUser(req.query.userId || req.body.userId, (error, user) => {
-    if (error) return next(error);
-
-    debug("Ensured user exists with info: ", user.dataValues);
-    req.user = user; // set user onto req obj for next middlewares
-    next();
-  });
-}
 
 
 /**
@@ -84,7 +45,7 @@ function createChangeLogPromise(taskId, status) {
  * }
  */
 const taskAddRequiredParams = ["taskName", "cost", "expiresAt", "refreshRate", "answersLeft", "locationName", "lat", "lng", "radius", "taskActions"];
-router.post(CONSTANTS.ROUTES.DB.TASK_ADD, ensureUserExists, checkRequiredParams(taskAddRequiredParams), (req, res, next) => {
+router.post(CONSTANTS.ROUTES.DB.TASK_ADD, middlewares.ensureUserExists, middlewares.checkRequiredParams(taskAddRequiredParams), (req, res, next) => {
   debug("Requested to create task with following params: ", req.body);
 
   if (!parseFloat(req.body["cost"])) {
@@ -246,7 +207,7 @@ router.get(CONSTANTS.ROUTES.DB.TASK_SYNC, (req, res, next) => {
  *    "balance": userBalance
  * }
  */
-router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, ensureUserExists, checkRequiredParams(["taskId", "responses", "taskActionIds"]), (req, res, next) => {
+router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, middlewares.ensureUserExists, middlewares.checkRequiredParams(["taskId", "responses", "taskActionIds"]), (req, res, next) => {
   const user = req.user;
   const taskId = req.body.taskId;
   const taskActionResponses = JSON.parse(req.body.responses); // JSONObj {taskActionId: response} as a string
@@ -313,7 +274,7 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, ensureUserExists, checkRequiredPar
  *    "responses": // [responseObj]
  * }
  */
-router.get(CONSTANTS.ROUTES.DB.RESPONSE_FETCH, checkRequiredParams(["taskId"]), (req, res, next) => {
+router.get(CONSTANTS.ROUTES.DB.RESPONSE_FETCH, middlewares.checkRequiredParams(["taskId"]), (req, res, next) => {
   const taskId = req.query.taskId;
   debug(`Fetching all task actions with taskId=${taskId}`);
 
@@ -326,53 +287,6 @@ router.get(CONSTANTS.ROUTES.DB.RESPONSE_FETCH, checkRequiredParams(["taskId"]), 
     debug(`Fetched ${fetchedResponses.length} responses.`);
     res.json({error: "", responses: fetchedResponses});
   });
-});
-
-
-/**
- * POST: /db/user-create
- *
- * req: {
- *    "userId": id,
- *    "gcmToken": gcmToken, (optional)
- *    "balance": balance (optional, will default to DEFAULT_BALANCE)
- * }
- *
- * res: {
- *    "error": "", // TODO: remove
- *    "result": false if user already existed and only gcmToken was updated or true otherwise
- * }
- */
-router.post(CONSTANTS.ROUTES.DB.USER_CREATE, checkRequiredParams(["userId"]), (req, res, next) => {
-  const {userId, balance, gcmToken} = req.body;
-  debug(`Creating or updating user with userId=${userId}, balance=${balance}, gcmToken=${gcmToken}`);
-
-  db[CONSTANTS.MODELS.USER].createOrUpdateUser(userId, balance, gcmToken, (error, result) => {
-    if (error) return next(error);
-    res.json({error: "", result: result});
-  });
-});
-
-
-/**
- * GET: /db/user-fetch
- *
- * req: {
- *    "userId": userId
- * }
- *
- * res: {
- *    "id": userId,
- *    "balance": balance,
- *    "gcmToken": gcmToken or null if not provided,
- *    "createdAt": timeString,
- *    "updatedAt": timeString (e.g. "2016-06-23T19:37:47.135Z")
- * }
- */
-router.get(CONSTANTS.ROUTES.DB.USER_FETCH, ensureUserExists, (req, res, next) => {
-  debug(`Fetching info of user with id=${req.user.id}`);
-
-  res.json(req.user);
 });
 
 // error handling middleware only for current route

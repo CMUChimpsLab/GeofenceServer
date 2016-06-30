@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "DEBUG=app:* node server.js --development",
-    "test": "mocha test"
+    "test": "NODE_ENV=test mocha test"
   },
   "engines": {
     "node": ">=6.2.1"

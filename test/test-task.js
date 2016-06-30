@@ -33,66 +33,6 @@ describe('GET /', function() {
   });
 });
 
-describe('POST /db/user-create', function() {
-  it('creates a new user', function(done) {
-    server.post('/db/user-create')
-      .send(fakeUser)
-      .expect(200)
-      .expect('Content-Type', /json/)
-      .expect(function(res) {
-        // Correct response should be: {"error": "", "result": true}
-        // where "result" is `true` if the user never had a gcmToken before and `false` if otherwise.
-        // In other words, sending a request to `/db/user-create` with an existing userId is basically
-        // just updating the gcmToken for that user.
-        if (res.body.error) throw new Error("error while creating a new user");
-        if (!res.body.result) throw new Error("gcmToken somehow existed previously");
-      })
-      .end(function (err, res) {
-        if(err) return done(err);
-        done();
-      });
-  });
-  it('updates the gcmToken for an existing user', function(done) {
-    server.post('/db/user-create')
-      .send(fakeUser)
-      .expect(200)
-      .expect('Content-Type', /json/)
-      .expect(function(res) {
-        if (res.body.error) throw new Error("error while accessing an existing user");
-        if (res.body.result) throw new Error("gcmToken somehow didn't exist previously");
-      })
-      .end(function (err, res) {
-        if(err) return done(err);
-        done();
-      });
-  });
-  it('successfully fetches a real user', function(done) {
-    server.get('/db/user-fetch')
-      .query({userId: fakeUser.userId})
-      .expect(function(res) {
-        if(res.body['id'] != fakeUser.userId) {
-          throw new Error("Didn't find the user.");
-        }
-      })
-      .end(function (err, res) { // changed from end(done);
-        if (err) {
-          console.error(res.error);
-        }
-        done(err);
-      });
-  });
-  it('correctly doesn\'t find a user who doesn\'t exist', function(done) {
-    server.get('/db/user-fetch')
-      .query({userId: "not_a_user@seriouslynotauser.com"})
-      .expect(function(res) {
-        if (res.body !== null) {
-          throw new Error("Found a user, even though this user didn't exist.");
-        }
-      })
-      .end(done);
-  });
-});
-
 var createdTaskIdQuickExpire, createdTaskActionQuickExpire;
 describe('POST /db/task-add', function() {
   var task = {
