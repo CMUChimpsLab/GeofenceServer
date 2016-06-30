@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "DEBUG=app:* node server.js --development",
+    "start": "DEBUG=app:* node app.js --development",
     "test": "NODE_ENV=test mocha test"
   },
   "engines": {

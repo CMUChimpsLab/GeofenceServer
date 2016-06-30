@@ -16,8 +16,7 @@ router.get(CONSTANTS.ROUTES.INDEX, (req, res, next) => {
       tasks: tasks
     });
   }).catch(error => {
-    console.log(error.message);
-    res.json({error: error.message});
+    next(error);
   });
 });
 
