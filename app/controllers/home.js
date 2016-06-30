@@ -21,13 +21,6 @@ router.get(CONSTANTS.ROUTES.INDEX, (req, res, next) => {
   });
 });
 
-router.get(CONSTANTS.ROUTES.TASK_ADD, (req, res, next) => {
-  res.render(CONSTANTS.VIEWS.TASK_ADD, {
-    title: 'CrowdsourcingServer - Add Task',
-    routes: CONSTANTS.ROUTES
-  });
-});
-
 module.exports = function (app) {
   app.use("/", router);
 };
