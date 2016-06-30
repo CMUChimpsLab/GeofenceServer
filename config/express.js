@@ -4,9 +4,7 @@ import logger from "morgan";
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import compress from "compression";
-import methodOverride from "method-override";
 import expressHandlebars from "express-handlebars";
-import HandlebarsIntl from "handlebars-intl";
 
 export default function (app, config) {
   const exphbs = expressHandlebars.create({
@@ -18,12 +16,10 @@ export default function (app, config) {
   app.locals.ENV = env;
   app.locals.ENV_DEVELOPMENT = env == 'development';
 
-  HandlebarsIntl.registerWith(exphbs.handlebars);
   app.engine('handlebars', exphbs.engine);
   app.set('views', config.root + '/app/views');
   app.set('view engine', 'handlebars');
 
-  // app.use(favicon(config.root + '/public/img/favicon.ico'));
   app.use(logger('dev'));
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({
@@ -32,7 +28,6 @@ export default function (app, config) {
   app.use(cookieParser());
   app.use(compress());
   app.use(express.static(config.root + '/public'));
-  app.use(methodOverride());
 
   const controllers = glob.sync(config.root + '/app/controllers/*.js');
   controllers.forEach(controller => {
