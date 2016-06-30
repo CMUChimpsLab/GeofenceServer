@@ -1,7 +1,7 @@
-import CONSTANTS from "../../config/constants";
+const CONSTANTS = require("../../config/constants");
 
 // TODO addd the task creator.
-export default function (sequelize, DataType) {
+module.exports = function (sequelize, DataType) {
   const TaskResponse = sequelize.define(CONSTANTS.MODELS.TASK_RESPONSE, {
     createdAt: {type: DataType.DATE, allowNull: true}
   }, {

@@ -1,6 +1,6 @@
-import CONSTANTS from "../../config/constants";
+const CONSTANTS = require("../../config/constants");
 
-export default function (sequelize, DataType) {
+module.exports = function (sequelize, DataType) {
   const TaskActionResponse = sequelize.define(CONSTANTS.MODELS.TASK_ACTION_RESPONSE, {
     response: DataType.STRING
   }, {
@@ -20,10 +20,8 @@ export default function (sequelize, DataType) {
         });
       }
     },
-    instanceMethods: {
-
-    }
+    instanceMethods: {}
   });
 
   return TaskActionResponse;
-}
+};

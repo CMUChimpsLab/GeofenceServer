@@ -3,7 +3,7 @@ const VIEWS = {
   TASK_ADD: "task-add"
 };
 
-export const ROUTES = {
+const ROUTES = {
   INDEX: "/",
   TASK_ADD: "/" + VIEWS.TASK_ADD,
   DB: {
@@ -35,11 +35,9 @@ const HELPERS = {
   CHANGE_LOG_STATUS_UPDATED: "updated"
 };
 
-const CONSTANTS = {
+module.exports = {
   ROUTES: ROUTES,
   MODELS: MODELS,
   VIEWS: VIEWS,
   HELPERS: HELPERS
 };
-
-export default CONSTANTS;

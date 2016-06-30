@@ -1,7 +1,6 @@
-import CONSTANTS from "../../config/constants";
+const CONSTANTS = require("../../config/constants");
 
-
-export default function (sequelize, DataType) {
+module.exports = function (sequelize, DataType) {
   const User = sequelize.define(CONSTANTS.MODELS.USER, {
     id: {type: DataType.STRING, primaryKey: true, allowNull: false},
     balance: {type: DataType.DOUBLE, defaultValue: 20},

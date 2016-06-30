@@ -1,7 +1,6 @@
-import express from "express";
-import db from "../models";
-import CONSTANTS, {ROUTES} from "../../config/constants";
-
+const express = require("express");
+const db = require("../models");
+const CONSTANTS = require("../../config/constants");
 const router = express.Router();
 
 router.get(CONSTANTS.ROUTES.INDEX, (req, res, next) => {
@@ -13,7 +12,7 @@ router.get(CONSTANTS.ROUTES.INDEX, (req, res, next) => {
   }).then(tasks => {
     res.render(CONSTANTS.VIEWS.INDEX, {
       title: 'CrowdsourcingServer - Main',
-      routes: ROUTES,
+      routes: CONSTANTS.ROUTES,
       tasks: tasks
     });
   }).catch(error => {
@@ -25,10 +24,10 @@ router.get(CONSTANTS.ROUTES.INDEX, (req, res, next) => {
 router.get(CONSTANTS.ROUTES.TASK_ADD, (req, res, next) => {
   res.render(CONSTANTS.VIEWS.TASK_ADD, {
     title: 'CrowdsourcingServer - Add Task',
-    routes: ROUTES
+    routes: CONSTANTS.ROUTES
   });
 });
 
-export default function (app) {
+module.exports = function (app) {
   app.use("/", router);
-}
+};

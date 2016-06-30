@@ -1,6 +1,6 @@
-import CONSTANTS from "../../config/constants";
+const CONSTANTS = require("../../config/constants");
 
-export default function (sequelize, DataType) {
+module.exports = function (sequelize, DataType) {
   const TaskAction = sequelize.define(CONSTANTS.MODELS.TASK_ACTION, {
     description: {type: DataType.STRING, allowNull: false},
     type: {type: DataType.STRING, allowNull: false}
@@ -11,7 +11,7 @@ export default function (sequelize, DataType) {
           onDelete: "CASCADE",
           foreignKey: {allowNull: false}
         });
-        
+
         TaskAction.hasMany(models[CONSTANTS.MODELS.TASK_ACTION_RESPONSE], { // creates a `taskId` field
           onDelete: "CASCADE",
           foreignKey: {allowNull: false}

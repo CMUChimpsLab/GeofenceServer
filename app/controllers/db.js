@@ -1,9 +1,8 @@
 const debug = require("debug")("app:controllers:db");
-import express from "express";
-import db from "../models";
-import CONSTANTS, {ROUTES} from "../../config/constants";
-import GCM from "../helpers/gcm";
-
+const express = require("express");
+const db = require("../models");
+const CONSTANTS = require("../../config/constants");
+const GCM = require("../helpers/gcm");
 const router = express.Router();
 const gcm = new GCM();
 
@@ -382,6 +381,6 @@ router.use((err, req, res, next) => {
   res.status(err.status || 500).json({error: err.message});
 });
 
-export default function (app) {
+module.exports = function (app) {
   app.use("/", router);
 };

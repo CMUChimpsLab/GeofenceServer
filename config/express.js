@@ -1,24 +1,17 @@
-import express from "express";
-import glob from "glob";
-import logger from "morgan";
-import cookieParser from "cookie-parser";
-import bodyParser from "body-parser";
-import compress from "compression";
-import expressHandlebars from "express-handlebars";
+const express = require("express");
+const glob = require("glob");
+const logger = require("morgan");
+const cookieParser = require("cookie-parser");
+const bodyParser = require("body-parser");
+const compress = require("compression");
 
-export default function (app, config) {
-  const exphbs = expressHandlebars.create({
-    layoutsDir: config.root + '/app/views/layouts/',
-    defaultLayout: 'main',
-    partialsDir: [config.root + '/app/views/partials/']
-  });
+module.exports = function (app, config) {
   const env = process.env.NODE_ENV || 'development';
   app.locals.ENV = env;
   app.locals.ENV_DEVELOPMENT = env == 'development';
 
-  app.engine('handlebars', exphbs.engine);
   app.set('views', config.root + '/app/views');
-  app.set('view engine', 'handlebars');
+  app.set("view engine", "hbs");
 
   app.use(logger('dev'));
   app.use(bodyParser.json());
@@ -31,7 +24,7 @@ export default function (app, config) {
 
   const controllers = glob.sync(config.root + '/app/controllers/*.js');
   controllers.forEach(controller => {
-    require(controller)['default'](app);
+    require(controller)(app);
     // This means "for each controller file, load that file using require, then
     // call the default function that's exported, with app as a parameter.
     // Those default functions just say 'hey app, use these routes.'"

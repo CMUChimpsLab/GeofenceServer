@@ -1,8 +1,8 @@
 const debug = require("debug")("app:helpers:gcm");
-import gcmConfig from "../../config/gcm-config.json";
-import request from "request";
+const gcmConfig = require("../../config/gcm-config.json");
+const request = require("request");
 
-export default class GCM {
+module.exports = class GCM {
 
   constructor() {
     this.options = {
@@ -34,4 +34,4 @@ export default class GCM {
       cb(error, body);
     });
   }
-}
+};

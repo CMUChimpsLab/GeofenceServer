@@ -1,7 +1,13 @@
 <div class="container">
   <h1>{{title}}</h1>
 
-  {{> nav}}
+  <div class="nav">
+    <ul>
+      <li>
+        <a href="{{routes.INDEX}}">Main</a>
+      </li>
+    </ul>
+  </div>
 
   <ul>
     {{#each tasks}}
@@ -28,7 +34,8 @@
           {{/each}}
         </p>
 
-        <p>{{formatDate createdAt day="numeric" month="long" year="numeric"}}</p>
+        <br>
+        <p>{{createdAt}}</p>
         <br>
 
         <div class="nav">

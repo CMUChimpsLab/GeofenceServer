@@ -1,7 +1,7 @@
-import express from "express";
-import config from "./config/config";
-import db from "./app/models";
-import setup from './config/express';
+const express = require("express");
+const config = require("./config/config");
+const db = require("./app/models");
+const setup = require("./config/express");
 
 const app = express();
 setup(app, config);

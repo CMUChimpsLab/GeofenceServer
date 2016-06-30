@@ -1,6 +1,6 @@
-import CONSTANTS from "../../config/constants";
+const CONSTANTS = require("../../config/constants");
 
-export default function (sequelize, DataType) {
+module.exports = function (sequelize, DataType) {
   const Location = sequelize.define(CONSTANTS.MODELS.LOCATION, {
     name: {type: DataType.STRING, allowNull: false},
     lat: {type: DataType.DOUBLE, allowNull: false},
@@ -18,4 +18,4 @@ export default function (sequelize, DataType) {
   });
 
   return Location;
-}
+};
