@@ -95,7 +95,11 @@ router.post(CONSTANTS.ROUTES.DB.TASK_ADD, middlewares.ensureUserExists, middlewa
     return next(error);
   }).then(createdTask => {
     createChangeLogPromise(createdTask.id, CONSTANTS.HELPERS.CHANGE_LOG_STATUS_CREATED).then(() => {
-      gcm.sendMessage({name: createdTask.name}, "all", (err, response) => {
+      gcm.sendMessage({
+        taskOwnerId: req.user.id,
+        taskName: createdTask.name,
+        taskStatus: CONSTANTS.HELPERS.CHANGE_LOG_STATUS_CREATED
+      }, null, (error) => {
         res.json({
           createdTaskId: createdTask.id,
           createdTaskActions: createdTask.taskactions
@@ -270,7 +274,11 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, middlewares.ensureUserExists, midd
           })).then((newActions, err) => {
             const taskStatus = task.answersLeft === 0 ? CONSTANTS.HELPERS.CHANGE_LOG_STATUS_COMPLETED : CONSTANTS.HELPERS.CHANGE_LOG_STATUS_UPDATED;
             createChangeLogPromise(taskId, taskStatus).then(() => {
-              gcm.sendMessage({balance: task.user.balance, id: task.id}, task.user.gcmToken, (err, response) => {
+              gcm.sendMessage({
+                taskOwnerId: task.user.id,
+                taskName: task.name,
+                taskStatus: CONSTANTS.HELPERS.CHANGE_LOG_STATUS_UPDATED
+              }, null, (error) => {
                 res.json({
                   error: "",
                   result: true,
