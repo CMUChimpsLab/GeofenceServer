@@ -29,7 +29,18 @@ function createChangeLogPromise(taskId, status) {
  * POST: /db/task-add
  *
  * req: {
- *    // taskObj
+ *    "userId": userId,
+ *    "taskName": taskName,
+ *    "cost": cost,
+ *    "expiresAt": expiresAt in epoch time,
+ *    "refreshRate": refreshRate in minutes,
+ *    "answersLeft": answersLeft (-1 to have unlimited answers),
+ *    "locationName": locationName,
+ *    "lat": lat,
+ *    "lng": lng,
+ *    "radius": radius in meters,
+ *    "taskActions[n][description]": taskActionDescription for taskAction #n,
+ *    "taskActions[n][type]": taskActionType for taskAction #n
  * }
  *
  * res: {
@@ -227,43 +238,44 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, middlewares.ensureUserExists, midd
     where: {id: taskId},
     include: [db[CONSTANTS.MODELS.USER], {model: db[CONSTANTS.MODELS.TASK_RESPONSE], order: '"createdAt" DESC'}]
   }).then(task => {
-    if (task.answersLeft === 0) return next(new Error("Task is already completed."));  // no answers left
-
-    task.acceptingNewResponses((error) => {
+    task.canAcceptNewResponses((error) => {
       if (error) return next(error);
 
-      task.user.update({balance: task.user.balance - task.cost});
-      user.update({balance: user.balance + task.cost});
-      task.update({answersLeft: task.answersLeft - 1});
-
-      db[CONSTANTS.MODELS.TASK_RESPONSE].create({
-        userId: user.id,
-        taskId: taskId
-      }, {
-        include: [db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE]]
-      }).catch(error => {
-        return next(error);
-      }).then((createdTaskResponse, err) => {
-        db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE].bulkCreate(taskActionIdArray.map(id => {
-          debug("Action ID: #" + id + " Response: " + taskActionResponses[id]);
-          return {
-            userId: user.id,
-            response: taskActionResponses[id],
-            taskactionId: id,
-            taskresponseId: createdTaskResponse.id
-          }
-        })).then((newActions, err) => {
-          createChangeLogPromise(taskId, CONSTANTS.HELPERS.CHANGE_LOG_STATUS_UPDATED).then(() => {
-            gcm.sendMessage({balance: task.user.balance, id: task.id}, task.user.gcmToken, (err, response) => {
-              res.json({
-                error: "",
-                result: true,
-                balance: user.balance
-              });
-            });
-          });
+      Promise.all([
+        task.user.update({balance: task.user.balance - task.cost}),
+        user.update({balance: user.balance + task.cost}),
+        task.update({answersLeft: task.answersLeft - 1})
+      ]).then(values => {
+        db[CONSTANTS.MODELS.TASK_RESPONSE].create({
+          userId: user.id,
+          taskId: taskId
+        }, {
+          include: [db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE]]
         }).catch(error => {
           return next(error);
+        }).then((createdTaskResponse, err) => {
+          db[CONSTANTS.MODELS.TASK_ACTION_RESPONSE].bulkCreate(taskActionIdArray.map(id => {
+            debug(`Setting response="${taskActionResponses[id]}" for taskActionId=${id}`);
+            return {
+              userId: user.id,
+              response: taskActionResponses[id],
+              taskactionId: id,
+              taskresponseId: createdTaskResponse.id
+            }
+          })).then((newActions, err) => {
+            const taskStatus = task.answersLeft === 0 ? CONSTANTS.HELPERS.CHANGE_LOG_STATUS_COMPLETED : CONSTANTS.HELPERS.CHANGE_LOG_STATUS_UPDATED;
+            createChangeLogPromise(taskId, taskStatus).then(() => {
+              gcm.sendMessage({balance: task.user.balance, id: task.id}, task.user.gcmToken, (err, response) => {
+                res.json({
+                  error: "",
+                  result: true,
+                  balance: user.balance
+                });
+              });
+            });
+          }).catch(error => {
+            return next(error);
+          });
         });
       });
     });

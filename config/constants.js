@@ -32,7 +32,8 @@ const HELPERS = {
   SUFFIX_ID_FIELD: "Id",
   CHANGE_LOG_STATUS_CREATED: "created",
   CHANGE_LOG_STATUS_DELETED: "deleted",
-  CHANGE_LOG_STATUS_UPDATED: "updated"
+  CHANGE_LOG_STATUS_UPDATED: "updated",
+  CHANGE_LOG_STATUS_COMPLETED: "completed"
 };
 
 module.exports = {

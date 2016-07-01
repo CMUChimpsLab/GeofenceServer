@@ -21,27 +21,30 @@ module.exports = function (sequelize, DataType) {
       }
     },
     instanceMethods: {
-      acceptingNewResponses: function (cb) {
-        //This function will check if a task has expired, the user has enough $, and the recency of the most recent entry
-        var task = this;
-        var requestingUser = task.user;
-        var exp_time = new Date(task['expiresAt']);
-        var now = new Date();
-        var latestResponseTime = new Date();
-        latestResponseTime.setTime(1);
-        if (task.taskresponses.length > 0) {
-          latestResponseTime = task.taskresponses[0].createdAt;  // if there is no prior taskResponse, create 1970 date.
-        }
-        var nextAvailableTime = new Date(latestResponseTime.getTime());
-        nextAvailableTime.setMinutes(latestResponseTime.getMinutes() + task['refreshRate']);
 
-        if (now > exp_time) { //check if the Task has expired
-          return cb(new Error(`Task has expired at ${exp_time}`));
+      /**
+       * Checks if a task can be responded to by a user.
+       *
+       * @param cb callback function with params (error)
+       */
+      canAcceptNewResponses: function (cb) {
+        const taskOwner = this.user;
+        const expirationTime = new Date(this.expiresAt);
+        const currentTime = new Date();
+        const latestResponseTime = this.taskresponses.length > 0 ? this.taskresponses[0].createdAt : new Date(0); // if there is no prior taskResponse, create 1970 date.
+        const nextAvailableTime = new Date(latestResponseTime.getTime());
+        nextAvailableTime.setMinutes(latestResponseTime.getMinutes() + this.refreshRate);
+
+        if (this.answersLeft === 0) { // task has been completed
+          return cb(new Error("Task has already been completed."));
         }
-        if (requestingUser.balance - task.cost < 0) { // check if the user has money to pay
+        if (currentTime > expirationTime) { // task has expired
+          return cb(new Error(`Task has expired at ${expirationTime}`));
+        }
+        if (taskOwner.balance - this.cost < 0) { // user does not enough money to pay
           return cb(new Error("The user does not have the funds to pay"));
         }
-        if (now < nextAvailableTime) { // check if it has been answered too recently
+        if (currentTime < nextAvailableTime) { // task has been answered recently
           return cb(new Error(`Another user has recently answered the question. Next available time is ${nextAvailableTime}`));
         }
 
