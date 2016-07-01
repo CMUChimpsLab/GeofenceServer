@@ -104,6 +104,11 @@ router.post(CONSTANTS.ROUTES.DB.TASK_ADD, middlewares.ensureUserExists, middlewa
     }).catch(error => {
       return next(error);
     });
+
+    // log task status when it expires
+    setTimeout(() => {
+      createChangeLogPromise(createdTask.id, CONSTANTS.HELPERS.CHANGE_LOG_STATUS_COMPLETED);
+    }, expiresAt - (new Date().getTime()));
   });
 });
 
@@ -309,6 +314,7 @@ router.get(CONSTANTS.ROUTES.DB.RESPONSE_FETCH, middlewares.checkRequiredParams([
     res.json({error: "", responses: fetchedResponses});
   });
 });
+
 
 // error handling middleware only for current route
 router.use((err, req, res, next) => {
