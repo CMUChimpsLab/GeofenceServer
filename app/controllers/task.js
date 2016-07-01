@@ -97,6 +97,7 @@ router.post(CONSTANTS.ROUTES.DB.TASK_ADD, middlewares.ensureUserExists, middlewa
     createChangeLogPromise(createdTask.id, CONSTANTS.HELPERS.CHANGE_LOG_STATUS_CREATED).then(() => {
       gcm.sendMessage({
         taskOwnerId: req.user.id,
+        taskId: createdTask.id,
         taskName: createdTask.name,
         taskStatus: CONSTANTS.HELPERS.CHANGE_LOG_STATUS_CREATED
       }, null, (error) => {
@@ -276,6 +277,7 @@ router.post(CONSTANTS.ROUTES.DB.TASK_RESPOND, middlewares.ensureUserExists, midd
             createChangeLogPromise(taskId, taskStatus).then(() => {
               gcm.sendMessage({
                 taskOwnerId: task.user.id,
+                taskId: task.id,
                 taskName: task.name,
                 taskStatus: CONSTANTS.HELPERS.CHANGE_LOG_STATUS_UPDATED
               }, null, (error) => {
