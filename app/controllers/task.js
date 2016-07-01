@@ -46,29 +46,38 @@ function createChangeLogPromise(taskId, status) {
  */
 const taskAddRequiredParams = ["taskName", "cost", "expiresAt", "refreshRate", "answersLeft", "locationName", "lat", "lng", "radius", "taskActions"];
 router.post(CONSTANTS.ROUTES.DB.TASK_ADD, middlewares.ensureUserExists, middlewares.checkRequiredParams(taskAddRequiredParams), (req, res, next) => {
-  debug("Requested to create task with following params: ", req.body);
 
-  if (!parseFloat(req.body["cost"])) {
-    return next(new Error("Cost must be a number (in dollars)."));
+  function isNumeric(n) {
+    return !isNaN(parseFloat(n)) && isFinite(n);
   }
-  if (!parseFloat(req.body["lat"]) || !parseFloat(req.body["lng"])) {
+
+  debug("Requested to create task with following params: ", req.body);
+  const {taskName, cost, refreshRate, expiresAt, answersLeft, locationName, lat, lng, radius, taskActions} = req.body;
+
+  if (!isNumeric(cost)) {
+    return next(new Error("Cost must be a number in dollars."));
+  }
+  if (!isNumeric(lat) || !isNumeric(lng)) {
     return next(new Error("Lat and Lng must both be numbers."));
+  }
+  if (cost > req.user.balance) {
+    return next(new Error("User does not have enough balance to create the task."));
   }
 
   db[CONSTANTS.MODELS.TASK].create({
-    userId: req.body.userId,
-    name: req.body.taskName,
-    cost: req.body.cost,
-    refreshRate: req.body.refreshRate,
-    expiresAt: req.body.expiresAt,
-    answersLeft: req.body.answersLeft,
+    userId: req.user.id,
+    name: taskName,
+    cost: Number(parseFloat(cost).toFixed(2)), // truncate to cents
+    refreshRate: refreshRate,
+    expiresAt: expiresAt,
+    answersLeft: answersLeft,
     location: {
-      name: req.body.locationName,
-      lat: req.body.lat,
-      lng: req.body.lng,
-      radius: req.body.radius
+      name: locationName,
+      lat: lat,
+      lng: lng,
+      radius: radius
     },
-    taskactions: req.body.taskActions
+    taskactions: taskActions
   }, {
     include: [db[CONSTANTS.MODELS.TASK_ACTION], db[CONSTANTS.MODELS.LOCATION]]
   }).catch(error => {
