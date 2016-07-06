@@ -20,6 +20,12 @@ router.get(CONSTANTS.ROUTES.INDEX, (req, res, next) => {
   });
 });
 
+router.get(CONSTANTS.ROUTES.APK, (req, res, next) => {
+  console.log("Download");
+  var file = __dirname + '/../../public/apk/debug.apk';
+  res.download(file);
+});
+
 module.exports = function (app) {
   app.use("/", router);
 };

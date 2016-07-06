@@ -15,7 +15,8 @@ const ROUTES = {
     RESPONSE_FETCH: "/db/response-fetch",
     USER_CREATE: "/db/user-create",
     USER_FETCH: "/db/user-fetch"
-  }
+  },
+  APK: "/apk"
 };
 
 const MODELS = {
