@@ -21,7 +21,6 @@ router.get(CONSTANTS.ROUTES.INDEX, (req, res, next) => {
 });
 
 router.get(CONSTANTS.ROUTES.APK, (req, res, next) => {
-  console.log("Download");
   var file = __dirname + '/../../public/apk/citysourcing.apk';
   res.download(file);
 });
