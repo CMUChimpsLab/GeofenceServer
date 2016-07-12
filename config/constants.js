@@ -1,13 +1,13 @@
 const VIEWS = {
   INDEX: "index",
-  TASK_ADD: "task-add"
+  REPORT: "report",
+  ERROR: "error"
 };
 
 const ROUTES = {
   INDEX: "/",
-  TASK_ADD: "/" + VIEWS.TASK_ADD,
   DB: {
-    TASK_ADD: "/db/" + VIEWS.TASK_ADD,
+    TASK_ADD: "/db/task-add",
     TASK_DELETE: "/db/task-delete",
     TASK_FETCH: "/db/task-fetch",
     TASK_SYNC: "/db/task-sync",

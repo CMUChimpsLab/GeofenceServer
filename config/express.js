@@ -4,6 +4,7 @@ const logger = require("morgan");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 const compress = require("compression");
+const CONSTANTS = require("./constants");
 
 module.exports = function (app, config) {
   const env = process.env.NODE_ENV || 'development';
@@ -42,7 +43,7 @@ module.exports = function (app, config) {
   if (app.get('env') === 'development') {
     app.use((err, req, res, next) => {
       res.status(err.status || 500);
-      res.render('error', {
+      res.render(CONSTANTS.VIEWS.ERROR, {
         message: err.message,
         error: err,
         title: 'error'
@@ -53,7 +54,7 @@ module.exports = function (app, config) {
   app.use((err, req, res, next) => {
     console.log(err);
     res.status(err.status || 500);
-    res.render('error', {
+    res.render(CONSTANTS.VIEWS.ERROR, {
       message: err.message,
       error: {},
       title: 'error'
