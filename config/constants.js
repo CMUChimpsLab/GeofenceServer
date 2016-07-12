@@ -6,6 +6,7 @@ const VIEWS = {
 
 const ROUTES = {
   INDEX: "/",
+  REPORT: "/" + VIEWS.REPORT,
   DB: {
     TASK_ADD: "/db/task-add",
     TASK_DELETE: "/db/task-delete",
