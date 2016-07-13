@@ -16,11 +16,80 @@
       <p>Total tasks: {{tasks.length}}</p>
       <p>Total users: {{users.length}}</p>
     </li>
+
+    <li class="task">
+      <h2>Cost Distribution</h2>
+      <svg id="costs" class="chart"></svg>
+    </li>
   </ul>
 
-  <svg width="300" height="180">
-    <circle cx="30" cy="50" r="25"/>
-    <rect x="10" y="80" width="40" height="40" fill="steelBlue"/>
-  </svg>
-
 </div>
+<script></script>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script>
+  var costdata = [
+    {cost: "A", num: 4},
+    {cost: "B", num: 8},
+    {cost: "C", num: 15},
+    {cost: "D", num: 16},
+    {cost: "E", num: 23},
+    {cost: "F", num: 42}
+  ];
+
+  var margin = {top: 20, right: 30, bottom: 30, left: 40},
+    width = $("#costs").parent().width() - margin.left - margin.right;
+    height = 500 - margin.top - margin.bottom;
+
+  var x = d3.scaleBand()
+    .domain(costdata.map(function(d) { return d.cost; }))
+    .rangeRound([0, width])
+    .paddingInner(0.01);
+
+  var y = d3.scaleLinear()
+    .domain([0, d3.max(costdata, function(d) { return d.num; })])
+    .range([height, 0]);
+
+  var xAxis = d3.axisBottom()
+    .scale(x);
+
+  var yAxis = d3.axisLeft()
+    .scale(y);
+
+  var chart = d3.select(".chart")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  // x axis
+  chart.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + height + ")")
+    .call(xAxis);
+    
+  // y axis
+  chart.append("g")
+      .attr("class", "y axis")
+      .call(yAxis)
+    .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text("Frequency");
+
+  chart.selectAll(".bar")
+      .data(costdata)
+    .enter().append("rect")
+      .attr("class", "bar")
+      .attr("x", function(d) { return x(d.cost); })
+      .attr("width", x.bandwidth())
+      .attr("y", function(d) { return y(d.num); })
+      .attr("height", function(d) { return height - y(d.num); });
+
+  function type(d) {
+    d.value = +d.value;     // coerce to number
+    return d;
+  }
+
+</script>
