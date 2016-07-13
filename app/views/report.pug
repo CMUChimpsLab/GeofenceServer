@@ -1,0 +1,36 @@
+html
+    head
+        meta(charset="utf-8")
+        meta(name="viewport" content="width=device-width")
+        title=title
+        include styles
+        if (ENV_DEVELOPMENT)
+            script(src="http://localhost:35729/livereload.js")
+    body
+        div(class="container")
+            h1=title
+
+            div(class="nav")
+                ul
+                    li
+                        a(href=routes.INDEX) Main
+            
+            ul
+                li(class="task")
+                    h2 Stats
+                    p
+                        | Total tasks:
+                        = " " + tasks.length
+                    p
+                        | Total users:
+                        = " " + users.length
+                
+                li(class="task")
+                    h2 Cost Distribution
+                    svg(id="costs" class="chart")
+        
+        include scripts
+        | <script>
+        include ./d3/costchart.js
+        | draw();
+        | </script>
