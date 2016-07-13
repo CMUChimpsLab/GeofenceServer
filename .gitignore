@@ -102,7 +102,7 @@ node_modules
 
 ### Project Specific
 
-# DB files
+# Data files
 data/*
 
 # Config files

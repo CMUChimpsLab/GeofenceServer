@@ -12,7 +12,8 @@ module.exports = function (app, config) {
   app.locals.ENV_DEVELOPMENT = env == 'development';
 
   app.set('views', config.root + '/app/views');
-  app.set("view engine", "hbs");
+  // app.set("view engine", "hbs");
+  app.set("view engine", "pug");
 
   app.use(logger('dev'));
   app.use(bodyParser.json());
