@@ -6,8 +6,10 @@ const fs = require("fs");
 const tsv = require("tsv");
 const sequelize = require("sequelize");
 
-// generate costdata.tsv and latlngdata.tsv
-// based on all the tasks
+/***
+ * generate costdata.tsv and latlngdata.tsv
+ * based on all the tasks
+ */
 function generateData(tasks) {
   // costdata.tsv
   db[CONSTANTS.MODELS.TASK].findAll({
@@ -15,9 +17,9 @@ function generateData(tasks) {
     group: ['cost']
   }).then(tasks => {
     var costdata = [];
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0.5; i <= 10; i+=0.5) {
       costdata.push({
-        cost: i / 2,
+        cost: i,
         num: 0
       });
     }
@@ -72,7 +74,7 @@ router.get(CONSTANTS.ROUTES.INDEX, (req, res, next) => {
     }]
   }).then(tasks => {
     res.render(CONSTANTS.VIEWS.INDEX, {
-      title: 'CrowdsourcingServer - Main',
+      title: 'Crowdsourcing Server',
       routes: CONSTANTS.ROUTES,
       tasks: tasks
     });
