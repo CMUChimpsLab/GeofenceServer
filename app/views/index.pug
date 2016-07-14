@@ -21,38 +21,42 @@ html
                         h2 Task
                         p 
                             | Name:
-                            = " " + name
+                            = " " + task.name
+                            br/
                             | Cost (dollars):
-                            = " " + cost
+                            = " " + task.cost
                         
                         h2 Location
                         p
                             p
                                 | Name: 
-                                = " " + location.name
+                                = " " + task.location.name
+                                br/
                                 | Lat: 
-                                = " " + location.lat
+                                = " " + task.location.lat
+                                br/
                                 | Lng: 
-                                = " " + location.lng
+                                = " " + task.location.lng
+                                br/
                                 | Radius (meters): 
-                                = " " + location.radius
+                                = " " + task.location.radius
                         
                         h2 Task Actions
                         p
-                            each taskaction in taskactions
+                            each taskaction in task.taskactions
                                 p
                                     | Description: 
-                                    = " " + description
-                                    | (Type:
-                                    = " " + type
+                                    = " " + taskaction.description
+                                    |  (Type:
+                                    = " " + taskaction.type
                                     | )
-                            each response in taskactionresponses
-                                p
-                                    | - Response: 
-                                    = " " + response
-                                    | (User:
-                                    = " " + userId
-                                    | )
+                                each response in taskaction.taskactionresponses
+                                    p
+                                        | - Response: 
+                                        = " " + response.response
+                                        | (User:
+                                        = " " + response.userId
+                                        | )
                         
                         br/
                         p=createdAt

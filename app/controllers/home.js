@@ -5,6 +5,23 @@ const router = express.Router();
 const fs = require("fs");
 const tsv = require("tsv");
 
+// generate costdata.tsv based on all the tasks
+function genCostData(tasks) {
+  db[CONSTANTS.MODELS.TASK].findAll({
+    group: ['cost']
+  }).then(tasks => {
+    console.log(tasks);
+  }).catch(error => {
+    console.log(error);
+  });
+
+  var costdata = [];
+
+  fs.writeFile(__dirname + "/../../data/costdata.tsv", tsv.stringify(costdata), function(err) {
+    console.log(err);
+  });
+}
+
 router.get(CONSTANTS.ROUTES.INDEX, (req, res, next) => {
   db[CONSTANTS.MODELS.TASK].findAll({
     include: [db[CONSTANTS.MODELS.LOCATION], {
@@ -24,18 +41,6 @@ router.get(CONSTANTS.ROUTES.INDEX, (req, res, next) => {
 
 // visualise
 router.get(CONSTANTS.ROUTES.REPORT, (req, res, next) => {
-  var costdata = [];
-  costdata.push({cost: "A", num: 4});
-  costdata.push({cost: "B", num: 8});
-  costdata.push({cost: "C", num: 15});
-  costdata.push({cost: "D", num: 16});
-  costdata.push({cost: "E", num: 23});
-  costdata.push({cost: "F", num: 42});
-
-  fs.writeFile(__dirname + "/../../data/costdata.tsv", tsv.stringify(costdata), function(err) {
-    console.log(err);
-  });
-
   db[CONSTANTS.MODELS.TASK].findAll({
     include: [
       db[CONSTANTS.MODELS.LOCATION],
@@ -43,6 +48,11 @@ router.get(CONSTANTS.ROUTES.REPORT, (req, res, next) => {
     ]
   }).then(tasks => {
     allTasks = tasks;
+
+    // generate costdata.tsv
+    genCostData(allTasks);
+
+    // then find all the users
     db[CONSTANTS.MODELS.USER].findAll({
       include: [
         db[CONSTANTS.MODELS.TASK],
