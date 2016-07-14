@@ -4,7 +4,7 @@ html
         meta(name="viewport" content="width=device-width")
         title=title
         include styles
-        if (ENV_DEVELOPMENT)
+        //- if (ENV_DEVELOPMENT)
             script(src="http://localhost:35729/livereload.js")
     body
         div(class="container")
@@ -27,10 +27,24 @@ html
                 
                 li(class="task")
                     h2 Cost Distribution
-                    svg(id="costs" class="chart")
+                    svg(id="costs" class="costchart")
         
-        include scripts
+                li(class="task")
+                    h2 Location Distribution
+                    div(id="map")
+                
+                li(class="task")
+                    h2 Usage Time Distribution
+                    p
+                        | Number of Tasks Created:
+                    svg(id="time" class="timegraph")
+
+        include extscripts
         | <script>
-        include ./d3/costchart.js
-        | draw();
+        include ./scripts/costchart.js
+        include ./scripts/map.js
+        include ./scripts/time.js
         | </script>
+
+        script(async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDMnIOyP8QuGHyX5Je0ijEbjC4XB5sOURU&callback=initMap")
+        //- API KEY: AIzaSyDMnIOyP8QuGHyX5Je0ijEbjC4XB5sOURU

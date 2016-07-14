@@ -54,7 +54,7 @@ html
                                     p
                                         | - Response: 
                                         = " " + response.response
-                                        | (User:
+                                        |  (User:
                                         = " " + response.userId
                                         | )
                         
@@ -64,6 +64,6 @@ html
                         div(class="nav")
                             ul
                                 li
-                                    a(href="../" + routes.DB.TASK_DELETE + "/" + id) Delete
+                                    a(href=".." + routes.DB.TASK_DELETE + "/" + task.id) Delete
         
-        include scripts
+        include extscripts
