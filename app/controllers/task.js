@@ -332,6 +332,6 @@ router.use((err, req, res, next) => {
   res.status(err.status || 500).json({error: err.message});
 });
 
-module.exports = function (app) {
+module.exports = app => {
   app.use("/", router);
 };
