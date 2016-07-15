@@ -62,7 +62,7 @@ function drawTimeChart() {
 
 function timetype(d) {
     d.createdAt = new Date(Date.parse(d.createdAt));
-    d.hours = d.createdAt.getHours();
+    d.hours = new Date(Date.parse(d.createdAt) + 18e5).getHours();  // round to whole hour
     return d;
 }
 
