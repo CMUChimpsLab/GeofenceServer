@@ -1,0 +1,34 @@
+html
+    head
+        meta(charset="utf-8")
+        meta(name="viewport" content="width=device-width")
+        title=title
+        include styles
+    body
+        div(class="container")
+            h1=title
+            
+            div(class="nav")
+                ul
+                    li
+                        a(href=routes.INDEX) Main
+            
+            ul
+                each user in users
+                    li(class="task")
+                        div
+
+                            p(style="float:left;")
+                                | Email: 
+                                a(href="mailto:"+user.id)=user.id
+                            p(align="right")
+                                | Last Activity:
+                                = " " + user.updatedAt
+                            p(style="float:left")
+                                | Tasks:
+                                = " " + user.tasks.length
+                            p(align="right")
+                                | Dormant Hours: 
+                                em(style="color:red;")=user.dormantHours
+
+        include extscripts
