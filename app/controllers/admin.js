@@ -107,7 +107,7 @@ router.get(CONSTANTS.ROUTES.ADMIN.USERS, (req, res, next) => {
     var now = new Date().getTime();
     for (let i = 0; i < users.length; i++) {
       var updated = Date.parse(users[i].updatedAt);
-      users[i]["dormantHours"] = parseFloat((now - updated) / 36e5).toFixed(2);
+      users[i]["dormantHours"] = parseFloat((now - updated) / 36e5).toFixed(1);
     }
 
     res.render(CONSTANTS.VIEWS.USERS, {
