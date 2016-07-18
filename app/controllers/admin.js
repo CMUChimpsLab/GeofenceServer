@@ -1,3 +1,5 @@
+"use strict"
+
 const express = require("express");
 const db = require("../models");
 const CONSTANTS = require("../../config/constants");

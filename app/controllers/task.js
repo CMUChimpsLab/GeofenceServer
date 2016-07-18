@@ -63,7 +63,7 @@ router.post(CONSTANTS.ROUTES.DB.TASK_ADD, middlewares.ensureUserExists, middlewa
   }
 
   debug("Requested to create task with following params: ", req.body);
-  const {taskName, cost, refreshRate, expiresAt, answersLeft, locationName, lat, lng, radius, taskActions} = req.body;
+  const {taskName, cost, refreshRate, expiresAt, answersLeft, locationName, lat, lng, radius, taskActions, createLat, createLng} = req.body;
 
   if (!isNumeric(cost)) {
     return next(new Error("Cost must be a number in dollars."));
@@ -82,6 +82,8 @@ router.post(CONSTANTS.ROUTES.DB.TASK_ADD, middlewares.ensureUserExists, middlewa
     refreshRate: refreshRate,
     expiresAt: expiresAt,
     answersLeft: answersLeft,
+    createLat: Number(parseFloat(createLat).toFixed(6)),
+    createLng: Number(parseFloat(createLng).toFixed(6)),
     location: {
       name: locationName,
       lat: lat,
@@ -94,6 +96,9 @@ router.post(CONSTANTS.ROUTES.DB.TASK_ADD, middlewares.ensureUserExists, middlewa
   }).catch(error => {
     return next(error);
   }).then(createdTask => {
+
+    console.log(createdTask.createdLocation);
+
     createChangeLogPromise(createdTask.id, CONSTANTS.HELPERS.CHANGE_LOG_STATUS_CREATED).then(() => {
       gcm.sendMessage({
         taskOwnerId: req.user.id,
@@ -137,7 +142,7 @@ router.get(CONSTANTS.ROUTES.DB.TASK_DELETE + "/:taskId", (req, res, next) => {
     where: {
       id: taskId
     },
-    include: [db[CONSTANTS.MODELS.LOCATION], db[CONSTANTS.MODELS.TASK_RESPONSE]] // TODO: also destroy corresponding locations, taskactions, and taskactionresponses
+    include: [db[CONSTANTS.MODELS.LOCATION], db[CONSTANTS.MODELS.TASK_RESPONSE]]
   }).then(createChangeLogPromise(taskId, CONSTANTS.HELPERS.CHANGE_LOG_STATUS_DELETED)).then(() => {
     res.redirect(CONSTANTS.ROUTES.INDEX);
   }).catch(error => {
