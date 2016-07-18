@@ -84,6 +84,7 @@ router.post(CONSTANTS.ROUTES.DB.TASK_ADD, middlewares.ensureUserExists, middlewa
     answersLeft: answersLeft,
     createLat: Number(parseFloat(createLat).toFixed(6)),
     createLng: Number(parseFloat(createLng).toFixed(6)),
+    activated: true,
     location: {
       name: locationName,
       lat: lat,
@@ -96,9 +97,6 @@ router.post(CONSTANTS.ROUTES.DB.TASK_ADD, middlewares.ensureUserExists, middlewa
   }).catch(error => {
     return next(error);
   }).then(createdTask => {
-
-    console.log(createdTask.createdLocation);
-
     createChangeLogPromise(createdTask.id, CONSTANTS.HELPERS.CHANGE_LOG_STATUS_CREATED).then(() => {
       gcm.sendMessage({
         taskOwnerId: req.user.id,
@@ -127,7 +125,7 @@ router.post(CONSTANTS.ROUTES.DB.TASK_ADD, middlewares.ensureUserExists, middlewa
  * GET: /db/task-delete/:task_id
  *
  * req: {
- *    // TODO: change to POST
+ *    
  * }
  *
  * res: {
@@ -145,6 +143,35 @@ router.get(CONSTANTS.ROUTES.DB.TASK_DELETE + "/:taskId", (req, res, next) => {
     include: [db[CONSTANTS.MODELS.LOCATION], db[CONSTANTS.MODELS.TASK_RESPONSE]]
   }).then(createChangeLogPromise(taskId, CONSTANTS.HELPERS.CHANGE_LOG_STATUS_DELETED)).then(() => {
     res.redirect(CONSTANTS.ROUTES.INDEX);
+  }).catch(error => {
+    return next(error);
+  });
+});
+
+/**
+ * GET: /db/task-deactivate/:task_id
+ *
+ * req: {
+ *    
+ * }
+ *
+ * res: {
+ *    //
+ * }
+ */
+router.get(CONSTANTS.ROUTES.DB.TASK_DEACTIVATE + "/:taskId", (req, res, next) => {
+  const taskId = req.params.taskId;
+  debug(`Deactivating taskId=${taskId}`);
+  
+  db[CONSTANTS.MODELS.TASK].findOne({
+    where: {
+      id: taskId
+    }
+  }).then(task => {
+    task.update({ activated: false });
+    res.redirect(CONSTANTS.ROUTES.INDEX);
+    // use delete for now
+    createChangeLogPromise(taskId, CONSTANTS.HELPERS.CHANGE_LOG_STATUS_DELETED);
   }).catch(error => {
     return next(error);
   });

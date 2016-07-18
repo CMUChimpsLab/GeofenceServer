@@ -75,7 +75,7 @@ router.get(CONSTANTS.ROUTES.ADMIN.REPORT, (req, res, next) => {
       db[CONSTANTS.MODELS.USER]
     ]
   }).then(tasks => {
-    allTasks = tasks;
+    var allTasks = tasks;
 
     // generate tsv data
     generateData(allTasks);

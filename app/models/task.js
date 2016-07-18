@@ -8,12 +8,13 @@ module.exports = function (sequelize, DataType) {
     refreshRate: {type: DataType.DOUBLE, allowNull: false},
     expiresAt: {type: DataType.DOUBLE, allowNull: true},
     answersLeft: {type: DataType.INTEGER, allowNull: false},
+    activated: {type: DataType.BOOLEAN, allowNull: false},
     createLat: {type: DataType.DOUBLE, allowNull: true},
     createLng: {type: DataType.DOUBLE, allowNull: true}
   }, {
     classMethods: {
       associate: function (models) {
-        Task.hasMany(models[CONSTANTS.MODELS.LOCATION]);
+        Task.hasOne(models[CONSTANTS.MODELS.LOCATION]);
         Task.hasMany(models[CONSTANTS.MODELS.TASK_ACTION]);
         Task.hasMany(models[CONSTANTS.MODELS.TASK_RESPONSE]);
         Task.belongsTo(models[CONSTANTS.MODELS.USER], { // creates a `userId` (= MODELS.USER + "Id") field

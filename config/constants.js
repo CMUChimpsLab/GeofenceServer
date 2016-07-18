@@ -14,6 +14,7 @@ const ROUTES = {
   DB: {
     TASK_ADD: "/db/task-add",
     TASK_DELETE: "/db/task-delete",
+    TASK_DEACTIVATE: "/db/task-deactivate",
     TASK_FETCH: "/db/task-fetch",
     TASK_SYNC: "/db/task-sync",
     TASK_RESPOND: "/db/task-respond",
