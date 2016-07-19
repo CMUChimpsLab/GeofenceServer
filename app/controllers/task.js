@@ -171,7 +171,7 @@ router.get(CONSTANTS.ROUTES.DB.TASK_DEACTIVATE + "/:taskId", (req, res, next) =>
     task.update({ activated: false });
     res.redirect(CONSTANTS.ROUTES.INDEX);
     // use delete for now
-    createChangeLogPromise(taskId, CONSTANTS.HELPERS.CHANGE_LOG_STATUS_DELETED);
+    createChangeLogPromise(taskId, CONSTANTS.HELPERS.CHANGE_LOG_STATUS_COMPLETED);
   }).catch(error => {
     return next(error);
   });
