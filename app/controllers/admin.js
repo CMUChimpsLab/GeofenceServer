@@ -107,12 +107,17 @@ router.get(CONSTANTS.ROUTES.ADMIN.USERS, (req, res, next) => {
       db[CONSTANTS.MODELS.TASK_RESPONSE],
       db[CONSTANTS.MODELS.TASK]
     ]
-  }).then(users => {
+  }).then(dbUsers => {
     var now = new Date().getTime();
-    for (let i = 0; i < users.length; i++) {
-      var updated = Date.parse(users[i].updatedAt);
-      users[i]["dormantHours"] = parseFloat((now - updated) / 36e5).toFixed(1);
-      users[i]["updatedGMT"] = new Date(moment.tz(users[i]["updatedAt"], "America/New_York").format());
+    var users = [];
+    for (let i = 0; i < dbUsers.length; i++) {
+      var updated = Date.parse(dbUsers[i].updatedAt);
+      var newUser = {};
+      newUser["id"] = dbUsers[i]["id"];
+      newUser["dormantHours"] = parseFloat((now - updated) / 36e5).toFixed(1);
+      newUser["updateAt"] = new Date(moment.tz(dbUsers[i]["updatedAt"], "America/New_York").format());
+      newUser["tasks"] = dbUsers[i]["tasks"];
+      users.push(newUser);
   }
 
     res.render(CONSTANTS.VIEWS.USERS, {
