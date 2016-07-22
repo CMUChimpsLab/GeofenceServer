@@ -1,5 +1,3 @@
-"use strict"
-
 const express = require("express");
 const db = require("../models");
 const CONSTANTS = require("../../config/constants");
@@ -7,6 +5,7 @@ const router = express.Router();
 const fs = require("fs");
 const tsv = require("tsv");
 const Sequelize = require("sequelize");
+const moment = require("moment-timezone");
 
 /***
  * generate costdata.tsv and latlngdata.tsv
@@ -113,6 +112,7 @@ router.get(CONSTANTS.ROUTES.ADMIN.USERS, (req, res, next) => {
     for (let i = 0; i < users.length; i++) {
       var updated = Date.parse(users[i].updatedAt);
       users[i]["dormantHours"] = parseFloat((now - updated) / 36e5).toFixed(1);
+      users[i]["updatedAt"] = moment.tz(users[i]["updatedAt"], "America/New_York").format();
     }
 
     res.render(CONSTANTS.VIEWS.USERS, {
