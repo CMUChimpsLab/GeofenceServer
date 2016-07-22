@@ -44,7 +44,6 @@ function generateData(tasks) {
   // this is not async
   var latlngdata = [];
   var timedata = [];
-  console.log(tasks[0]);
   tasks.map(task => {
     latlngdata.push({
       lat: task.location.lat,

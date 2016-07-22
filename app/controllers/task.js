@@ -57,7 +57,7 @@ function createChangeLogPromise(taskId, status) {
  */
 const taskAddRequiredParams = ["taskName", "cost", "expiresAt", "refreshRate", "answersLeft", "locationName", "lat", "lng", "radius", "taskActions"];
 router.post(CONSTANTS.ROUTES.DB.TASK_ADD, middlewares.ensureUserExists, middlewares.checkRequiredParams(taskAddRequiredParams), (req, res, next) => {
-
+  
   function isNumeric(n) {
     return !isNaN(parseFloat(n)) && isFinite(n);
   }
