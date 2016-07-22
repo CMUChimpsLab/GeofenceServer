@@ -5,7 +5,6 @@ const router = express.Router();
 const fs = require("fs");
 const tsv = require("tsv");
 const Sequelize = require("sequelize");
-const moment = require("moment-timezone");
 
 /***
  * generate costdata.tsv and latlngdata.tsv
