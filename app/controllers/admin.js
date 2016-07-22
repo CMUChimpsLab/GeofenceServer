@@ -32,6 +32,10 @@ function generateData(tasks) {
       });
     }
 
+    costdata.sort(function(a, b) {
+      return a.cost - b.cost;
+    });
+
     fs.writeFile(__dirname + "/../../data/costdata.tsv", tsv.stringify(costdata), err => {
       if (err)
         console.log(err);
