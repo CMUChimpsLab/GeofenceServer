@@ -112,8 +112,8 @@ router.get(CONSTANTS.ROUTES.ADMIN.USERS, (req, res, next) => {
     for (let i = 0; i < users.length; i++) {
       var updated = Date.parse(users[i].updatedAt);
       users[i]["dormantHours"] = parseFloat((now - updated) / 36e5).toFixed(1);
-      users[i]["updatedAt"] = moment.tz(users[i]["updatedAt"], "America/New_York").format();
-    }
+      users[i]["updatedGMT"] = new Date(moment.tz(users[i]["updatedAt"], "America/New_York").format());
+  }
 
     res.render(CONSTANTS.VIEWS.USERS, {
       title: "Crowdsourcing User Report",

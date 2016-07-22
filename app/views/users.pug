@@ -23,7 +23,7 @@ html
                                 a(href="mailto:"+user.id)=user.id
                             p(align="right")
                                 | Last Activity:
-                                = " " + user.updatedAt
+                                = " " + user.updatedGMT
                             p(style="float:left")
                                 | Tasks:
                                 = " " + user.tasks.length
