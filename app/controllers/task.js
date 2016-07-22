@@ -136,15 +136,13 @@ router.get(CONSTANTS.ROUTES.DB.TASK_DELETE + "/:taskId", (req, res, next) => {
   const taskId = req.params.taskId;
   debug(`Deleting all data for taskId=${taskId}`);
 
-  db[CONSTANTS.MODELS.TASK].findOne({
+  db[CONSTANTS.MODELS.TASK].destroy({
     where: {
       id: taskId
-    }
-  }).then(task => {
-    task.update({ activated: false });
+    },
+    include: [db[CONSTANTS.MODELS.LOCATION], db[CONSTANTS.MODELS.TASK_RESPONSE]]
+  }).then(createChangeLogPromise(taskId, CONSTANTS.HELPERS.CHANGE_LOG_STATUS_DELETED)).then( () => {
     res.redirect(CONSTANTS.ROUTES.INDEX);
-    // use delete for now
-    createChangeLogPromise(taskId, CONSTANTS.HELPERS.CHANGE_LOG_STATUS_DELETED);
   }).catch(error => {
     return next(error);
   });
