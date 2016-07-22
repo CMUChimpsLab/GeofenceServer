@@ -19,7 +19,7 @@ function generateData(tasks) {
     group: ['cost']
   }).then(tasks => {
     var costdata = [];
-    for (let i = 0.5; i <= 10; i+=0.5) {
+    for (let i = 0; i <= 10; i+=0.5) {
       costdata.push({
         cost: i,
         num: 0
