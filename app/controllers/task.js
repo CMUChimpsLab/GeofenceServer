@@ -6,6 +6,40 @@ const middlewares = require("../middlewares");
 const GCM = require("../helpers/gcm");
 const gcm = new GCM();
 
+const timeout = setInterval(function() {
+  db[CONSTANTS.MODELS.CHANGE_LOG].findAll().then(allChanges => {
+    var changes = allChanges.map(changeObj => {
+      if (changeObj.status === CONSTANTS.HELPERS.CHANGE_LOG_STATUS_COMPLETED
+        || changeObj.status === CONSTANTS.HELPERS.CHANGE_LOG_STATUS_DELETED) return Number(changeObj.taskId);
+      else return null;
+    });
+    // remove null (i.e. non-complete status)
+    for (let i = 0; i < changes.length; i++) {
+      if (changes[i] == null)
+        changes.splice(i--, 1);       // indices change
+    }
+
+    db[CONSTANTS.MODELS.TASK].findAll().then(allTasks => {
+      var tasks = allTasks.map(taskObj => {
+        // find all completed tasks
+        var currentTime = new Date().getTime();
+        if (taskObj.answersLeft == 0 || taskObj.expiresAt <= currentTime) return taskObj.id;
+        else return null;
+      });
+
+      // remove null (i.e. not expired ones)
+      for (let i = 0; i < tasks.length; i++) {
+        if (tasks[i] == null)
+          tasks.splice(i--, 1);       // indices change
+      }
+
+      for (let i = 0; i < tasks.length; i++)
+        if (changes.indexOf(tasks[i]) < 0)
+          // console.log("To be changed: " + tasks[i]);
+          createChangeLogPromise(tasks[i], CONSTANTS.HELPERS.CHANGE_LOG_STATUS_COMPLETED);
+    });
+  });
+}, 1000 * 60 * 5);    // every 5 minutes
 
 /**
  * Returns a promise that records status changes of tasks to the ChangeLog DB.
