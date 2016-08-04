@@ -100,6 +100,9 @@ router.get(CONSTANTS.ROUTES.ADMIN.REPORT, (req, res, next) => {
   });
 });
 
+/***
+ * Pulling user data
+ */
 router.get(CONSTANTS.ROUTES.ADMIN.USERS, (req, res, next) => {
   db[CONSTANTS.MODELS.USER].findAll({
     include: [
