@@ -2,7 +2,7 @@ var assert = require('assert');
 var should = require('should');
 var express = require('express');
 var supertest = require('supertest');
-require('../server.js');
+require('../app.js');
 var app = require('../app.js');
 
 var server = supertest(app); // handles server setup and shutdown I guess
