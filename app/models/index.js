@@ -9,6 +9,13 @@ const sequelize = new Sequelize(config.db, {
   logging: function() {} // Stop logging, it's a pain to read through.
 });
 
+if (!fs.existsSync(config.root + "/data")) {
+  fs.mkdir(config.root + "/data", error => {
+    if (error)
+      console.log(error);
+  })
+}
+
 fs.readdirSync(__dirname).filter(file => {
   return (file.indexOf('.') !== 0) && (file !== 'index.js');
 }).forEach(file => {
