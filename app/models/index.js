@@ -13,7 +13,7 @@ if (!fs.existsSync(config.root + "/data")) {
   fs.mkdir(config.root + "/data", error => {
     if (error)
       console.log(error);
-  })
+  });
 }
 
 fs.readdirSync(__dirname).filter(file => {
