@@ -18,7 +18,3 @@ Start the server by running `npm start` inside the root directory.
 ## How to run tests
 
 Run `npm test` inside the root directory. It will test everything in `test/test*.js`.
-
-## TODOs
-
-Apply for a new Google Map web api key and substitute the place holder in `report.pug` 
